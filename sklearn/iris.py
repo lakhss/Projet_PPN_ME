@@ -84,5 +84,5 @@ Y = labels
 clf = tree.DecisionTreeRegressor()
 clf = clf.fit(dataset, Y)
 predictions = clf.predict(dataset)
-print(predictions[:20])  # Print first 20 predictions to check
+print(predictions[:100])  # Print first 20 predictions to check
 
