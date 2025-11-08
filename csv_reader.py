@@ -1,3 +1,5 @@
+import glob 
+import os
 import pandas as pd
 
 def read_csv_file(file_path='datasets/15k_ga_adaptive.csv'):
@@ -22,3 +24,5 @@ if __name__ == "__main__":
 
 
 # ordre 6-5-9-10-1-2-8-3-4-11
+
+
