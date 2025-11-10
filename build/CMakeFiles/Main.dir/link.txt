@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/Main.dir/link.d CMakeFiles/Main.dir/src/data_reader.cpp.o CMakeFiles/Main.dir/src/decision_tree.cpp.o CMakeFiles/Main.dir/src/main.cpp.o CMakeFiles/Main.dir/src/node.cpp.o -o Main

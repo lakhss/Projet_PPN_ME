@@ -63,11 +63,11 @@ CMAKE_BINARY_DIR = /home/sabrina/Documents/M1/Projet_PPN_ME/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all:
+all: CMakeFiles/Main.dir/all
 .PHONY : all
 
 # The main recursive "codegen" target.
-codegen:
+codegen: CMakeFiles/Main.dir/codegen
 .PHONY : codegen
 
 # The main recursive "preinstall" target.
@@ -75,8 +75,40 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean:
+clean: CMakeFiles/Main.dir/clean
 .PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/Main.dir
+
+# All Build rule for target.
+CMakeFiles/Main.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Main.dir/build.make CMakeFiles/Main.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Main.dir/build.make CMakeFiles/Main.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sabrina/Documents/M1/Projet_PPN_ME/build/CMakeFiles --progress-num=1,2,3,4,5 "Built target Main"
+.PHONY : CMakeFiles/Main.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/Main.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/sabrina/Documents/M1/Projet_PPN_ME/build/CMakeFiles 5
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Main.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/sabrina/Documents/M1/Projet_PPN_ME/build/CMakeFiles 0
+.PHONY : CMakeFiles/Main.dir/rule
+
+# Convenience name for target.
+Main: CMakeFiles/Main.dir/rule
+.PHONY : Main
+
+# codegen rule for target.
+CMakeFiles/Main.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Main.dir/build.make CMakeFiles/Main.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/sabrina/Documents/M1/Projet_PPN_ME/build/CMakeFiles --progress-num=1,2,3,4,5 "Finished codegen for target Main"
+.PHONY : CMakeFiles/Main.dir/codegen
+
+# clean rule for target.
+CMakeFiles/Main.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Main.dir/build.make CMakeFiles/Main.dir/clean
+.PHONY : CMakeFiles/Main.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.
