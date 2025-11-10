@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn import tree
 import csv
+from matplotlib import pyplot as plt
 
 csv_file = '../datasets/15k_ga_adaptive.csv'
 
@@ -85,4 +86,8 @@ clf = tree.DecisionTreeRegressor()
 clf = clf.fit(dataset, Y)
 predictions = clf.predict(dataset)
 print(predictions[:100])  # Print first 20 predictions to check
+
+# Showing the tree in a text form to make it clearer
+text_representation = tree.export_text(clf)
+print(text_representation)
 
