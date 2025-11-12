@@ -87,7 +87,3 @@ clf = clf.fit(dataset, Y)
 predictions = clf.predict(dataset)
 print(predictions[:100])  # Print first 20 predictions to check
 
-# Showing the tree in a text form to make it clearer
-text_representation = tree.export_text(clf)
-print(text_representation)
-
