@@ -15,24 +15,11 @@ int main() {
     int count_30 = std::count(y.begin(), y.end(), 30.0);
     std::cout << "Performance : min = " << min_y 
               << " | max = " << max_y 
-              << " | valeurs exactement 30.0 = " << count_30 << std::endl;
+              << " | valeurs exactement = " << count_30 << std::endl;
 
-    std::random_device rd; std::mt19937 g(rd());
-    std::vector<size_t> idx(X.size());
-    std::iota(idx.begin(), idx.end(), 0);
-    std::shuffle(idx.begin(), idx.end(), g);
-    size_t split = X.size() * 0.8;
+    // La on fera les split 
 
-    for (size_t i = 0; i < split; ++i) {
-        X_train.push_back(X[idx[i]]);
-        y_train.push_back(y[idx[i]]);
-    }
-    for (size_t i = split; i < X.size(); ++i) {
-        X_test.push_back(X[idx[i]]);
-        y_test.push_back(y[idx[i]]);
-    }
-
-    // Entraînement
+    // Entraînement exemple 
     DecisionTreeRegressor tree;
     tree.max_depth = 12;
     tree.min_samples_split = 10;
@@ -42,7 +29,7 @@ int main() {
     auto end = std::chrono::high_resolution_clock::now();
     double time = std::chrono::duration<double>(end - start).count();
 
-    // Prédictions
+    // Prédictions exemple 
     double mse = 0.0;
     for (size_t i = 0; i < X_test.size(); ++i) {
         double pred = tree.predict(X_test[i]);
