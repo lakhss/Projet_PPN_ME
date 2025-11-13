@@ -8,7 +8,7 @@ int main() {
     std::vector<std::vector<double>> X, X_train, X_test;
     std::vector<double> y, y_train, y_test;
 
-    DataLoader::load_csv("15k_ga_adaptive.csv", X, y);
+    DataLoader::load_csv("15k_ga_adaptive.csv", X, y);  // a changer en fonction du data sets and path 
       
     double min_y = *std::min_element(y.begin(), y.end());
     double max_y = *std::max_element(y.begin(), y.end());
