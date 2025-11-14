@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <algorithm>
+
 
 /**
  * @brief Calcule la moyenne d'un vecteur.
@@ -17,23 +19,22 @@ double mean(const std::vector<double>& values) {
 }
 
 /**
- * @brief Calcule l'erreur quadratique moyenne (MSE).
- * 
- * Le MSE mesure à quel point les valeurs s'écartent de la moyenne du nœud.
- * 
+ * @brief Calcule l'erreur quadratique moyenne (MSE) — la moyenne des carrés des écarts.
+ *
  * @param values Vecteur des valeurs cibles (performances).
- * @return Le MSE du vecteur.
+ * @return Le MSE (somme des (v-mean)^2 divisée par n). Retourne 0 si values.empty().
  */
 double mse(const std::vector<double>& values) {
+    if (values.empty()) return 0.0;
     double m = mean(values);
     double sum = 0.0;
-
-    for(double v : values) {
-        sum += (v - m) * (v - m);
+    for (double v : values) {
+        double d = v - m;
+        sum += d * d;
     }
-    return sum;
-}
+    return sum / static_cast<double>(values.size());
 
+}
 /**
  * @brief Structure d'un nœud d'arbre de décision.
  */
@@ -62,13 +63,15 @@ struct Node {
  */
 Node* build_tree(const std::vector<std::vector<double>>& X,
                  const std::vector<double>& y,
-                 int depth = 0) 
+                 int depth = 0)
 {
     Node* node = new Node();
     node->samples = y.size();
 
-    // Stop Rules
-    if (depth >= MAX_DEPTH || y.size() <= MIN_SAMPLES) {
+    double current_mse = mse(y);
+
+    // Stop conditions améliorées
+    if (depth >= MAX_DEPTH || y.size() <= MIN_SAMPLES || current_mse < 1e-6) {
         node->is_leaf = true;
         node->value = mean(y);
         return node;
@@ -81,27 +84,37 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
     int best_feature = -1;
     double best_threshold = 0.0;
 
-    // On cherche le meilleur split (feature + seuil)
     for (int feature = 0; feature < m; ++feature) {
-        for (int row = 0; row < n; ++row) {
 
-            double threshold = X[row][feature];
+        // Trier les valeurs du feature
+        std::vector<double> sorted_values;
+        sorted_values.reserve(n);
+
+        for (auto &row : X)
+            sorted_values.push_back(row[feature]);
+
+        std::sort(sorted_values.begin(), sorted_values.end());
+
+        // Tester des seuils intelligents (valeurs intermédiaires)
+        for (int i = 0; i < n - 1; ++i) {
+
+            double threshold = (sorted_values[i] + sorted_values[i+1]) / 2.0;
 
             std::vector<double> left_y, right_y;
 
-            // Séparation des données selon le threshold
-            for (int i = 0; i < n; ++i) {
-                if (X[i][feature] <= threshold)  
-                    left_y.push_back(y[i]);
+            for (int k = 0; k < n; ++k) {
+                if (X[k][feature] <= threshold)
+                    left_y.push_back(y[k]);
                 else
-                    right_y.push_back(y[i]);
+                    right_y.push_back(y[k]);
             }
 
-            double mse_split = 
-                left_y.size() * mse(left_y) +
-                right_y.size() * mse(right_y);
+            if (left_y.empty() || right_y.empty())
+                continue;
 
-            mse_split /= n;
+            double mse_split =
+                (left_y.size() * mse(left_y) +
+                 right_y.size() * mse(right_y)) / n;
 
             if (mse_split < best_mse) {
                 best_mse = mse_split;
@@ -111,7 +124,6 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
         }
     }
 
-    // Si aucun split n'est bon, on stoppe
     if (best_feature == -1) {
         node->is_leaf = true;
         node->value = mean(y);
@@ -121,7 +133,6 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
     node->feature_index = best_feature;
     node->threshold = best_threshold;
 
-    //  Séparation finale pour construire les enfants
     std::vector<std::vector<double>> X_left, X_right;
     std::vector<double> y_left, y_right;
 
@@ -140,6 +151,7 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
 
     return node;
 }
+
 
 /**
  * @brief Prédit une valeur à partir d'un échantillon en parcourant l'arbre.
