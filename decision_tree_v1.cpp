@@ -1,7 +1,8 @@
 #include "Node_V1.hpp"
-#include "iostream"
+#include <iostream>
 #include <vector>
-#include <math.h>
+#include <cmath>
+
 
 // for now, we will use mse formula to determine which feature to pick to split
 // each node and for each of these features which threshold is the most optimal 
@@ -19,9 +20,10 @@ double mse(const std::vector<double>& y){ // the formula for mse is the sum of (
     // for each value of the node, the desired value is the mean of the values within the node 
     double sum = 0;
     double m = mean(y);
-    for (auto j = *y.begin(); j < *y.end(), ++j){
+    for (auto j = *y.begin(); j < *y.end(); ++j){
         sum += pow((j-m),2);
     }
+    return sum;
 }
 
 /* 
@@ -128,4 +130,37 @@ double predict(Node* node, const std::vector<double>& x){
     else {
         return predict(node->right, x);
     }
+}
+
+void print_vec(const std::vector<double>& x){
+    std::cout << "printing performances";
+    for (auto i = 0; i < x.size(); ++i){
+        std::cout << "%f" << x[i] << " ";
+    }
+}
+
+void print_vec_vec(const std::vector<std::vector<double>>& x){
+    std::cout << "printing features";
+    for (auto i= 0; i< x[0].size(); ++i){
+        for (auto j = 0; j<x.size(); ++j){
+            std::cout << "%f" << x[i][j] << " ";
+        }
+    }
+}
+
+int main(){
+    std::vector<std::vector<double>> test_features {{18,8,4784,4974,43,213,53,5,27,30},
+{22,3,2427,3109,108,29,2,92,4,7},
+{11,9,3426,2805,94,15,98,70,10,21},
+{22,20,4756,2779,153,230,18,32,24,11},
+{22,30,1328,3868,249,197,19,66,31,13},
+{11,18,4167,1397,56,175,42,42,12,31},
+{16,6,1646,2044,69,46,53,97,31,19},
+{8,5,1115,1111,111,20,35,67,22,24},
+{26,13,2668,1348,159,124,28,35,25,13},
+{19,12,2916,3957,49,118,13,72,16,29}};
+    std::vector<double> test_performance {0.130534,0.0321952,0.0374015,0.0576987,0.0209786,0.027608,0.0305594,0.0263897,0.0271464,0.0403354};
+    print_vec(test_performance);
+    print_vec_vec(test_features);
+
 }
