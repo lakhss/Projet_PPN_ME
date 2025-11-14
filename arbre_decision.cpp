@@ -165,8 +165,10 @@ int main() {
     double valeur_predite = predict(arbre, nouveau_sample);
 
     cout << "\n Prédiction" << endl;
-    cout << "Valeur prédite = " << valeur_predite << endl;
-
+   for(int i=0; i<10; i++){
+    double pred = predict(arbre, test_features [i]);
+    cout << "Sample " << i+1 << " -> Valeur prédite = " << pred << endl;
+    }
     return 0;
 }
 //g++ arbre_decision.cpp -o arbre
