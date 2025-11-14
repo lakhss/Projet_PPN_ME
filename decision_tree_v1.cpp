@@ -1,24 +1,25 @@
 #include "Node_V1.hpp"
 #include "iostream"
 #include <vector>
+#include <math.h>
 
 // for now, we will use mse formula to determine which feature to pick to split
 // each node and for each of these features which threshold is the most optimal 
 
-double mean(const vector<double>& x){
+double mean(const std::vector<double>& x){
     double sum = 0;
-    for (auto i = x.begin(); i < x.end(); ++i){
-        sum += i;
+    for (double i = *x.begin(); i < *x.end(); ++i){
+        sum = i+sum;
     }
     sum /= x.size();
     return sum;
 }
 
-double mse(const vector<double>& y){ // the formula for mse is the sum of (obtained_value - desired_value)² 
+double mse(const std::vector<double>& y){ // the formula for mse is the sum of (obtained_value - desired_value)² 
     // for each value of the node, the desired value is the mean of the values within the node 
     double sum = 0;
     double m = mean(y);
-    for (auto j = y.begin(); j < y.end(), ++j){
+    for (auto j = *y.begin(); j < *y.end(), ++j){
         sum += pow((j-m),2);
     }
 }
@@ -38,7 +39,7 @@ struct Stop_rule {
 # define MIN_SAMPLES 5
 # define MSE_MAX 100
 
-Node* tree (const vector<vector<double>>& Features, const vector<double>& Performance, int depth = 0){
+Node* tree (const std::vector<std::vector<double>>& Features, const std::vector<double>& Performance, int depth = 0){
     // current tree depth is null since we start at the root node
     Node* node = new Node();
     node->samples = Performance.size();
@@ -46,7 +47,7 @@ Node* tree (const vector<vector<double>>& Features, const vector<double>& Perfor
     // stop rule : if DEPTH_MAX is reached or if the number of samples within the node
     // don't go over the MIN_SAMPLES, we stop splitting
 
-    if(depth >= MAX_DEPTH || node.samples <= MIN_SAMPLES){
+    if(depth >= MAX_DEPTH || node->samples <= MIN_SAMPLES){
         node->is_leaf = true ; // we turn the node into a leaf, to stop splitting it
         node->value = mean(Performance); // the value of the leaf is the mean of all the samples within the leaf
         return node;
@@ -61,8 +62,8 @@ Node* tree (const vector<vector<double>>& Features, const vector<double>& Perfor
     for (auto i = 0; i < m; ++i){
         for (auto j = 0; j<n; ++j){
 
-            double threshold = Feature[j][i]; // going trough every value of each feature
-            vector<double> left, right; // storing the values of each performance either on the left node or the right
+            double threshold = Features[j][i]; // going trough every value of each feature
+            std::vector<double> left, right; // storing the values of each performance either on the left node or the right
 
             for (auto k = 0; k < n ; ++k){
                 if(Features[k][i] <= threshold){
@@ -75,14 +76,14 @@ Node* tree (const vector<vector<double>>& Features, const vector<double>& Perfor
 
             if (mse_ < mse_opt){ // if the mse is smaller, we keep it as optimal, along with the feature used and the threshold used
                 mse_opt = mse_;
-                feature_opt = feature;
+                feature_opt = Features[0][i];
                 threshold_opt = threshold;
             }
         }
     }
 
     // if there is no mse that is inferior to MSE_MAX, we will make the node a leaf
-    if (best_feature == -1){
+    if (feature_opt == -1){
         node->is_leaf = true;
         node->value = mean(Performance);
         return node;
@@ -94,8 +95,8 @@ Node* tree (const vector<vector<double>>& Features, const vector<double>& Perfor
 
 
     // Now we split the node into two children node, left and rigth
-    vector<vector<double>> Features_left, Features_right;
-    vector<double> Performance_left, Performance_right;
+    std::vector<std::vector<double>> Features_left, Features_right;
+    std::vector<double> Performance_left, Performance_right;
 
     for (auto i = 0; i < n; ++i){
         if(Features[i][feature_opt] <= threshold_opt ){
@@ -116,8 +117,8 @@ Node* tree (const vector<vector<double>>& Features, const vector<double>& Perfor
 
 // predicting new data
     
-double predict(Node* node, const vector<double>& x){
-    if(node->is_leaf {
+double predict(Node* node, const std::vector<double>& x){
+    if(node->is_leaf) {
         return node->value;
     } // once we reach a leaf, we return the mean
     
