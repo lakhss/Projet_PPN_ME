@@ -1,234 +1,205 @@
-/*
-Decision Tree Regression - single-file C++ implementation
+#include <iostream>
+#include <vector>
+#include <cmath>
 
-Usage:
-  g++ -std=c++17 -O2 decision_tree_regression.cpp -o dtr
-  ./dtr /mnt/data/15k_hvs.csv [max_depth] [min_samples_split]
-
-By default: max_depth=10, min_samples_split=5
-
-This program:
- - Loads a numeric CSV (first line header optional)
- - Assumes last column is the target (regression value)
- - Builds a binary regression tree by greedy variance reduction
- - Prints training RMSE and does a simple train/test split
- - Provides predict() for new samples
-
-Notes & limitations:
- - Only numeric values are supported. Non-numeric entries will cause failure.
- - No missing-value imputation.
- - Not optimized for very large datasets but reasonably efficient for thousands of rows.
-*/
-
-#include <bits/stdc++.h>
-using namespace std;
-
-struct Row { vector<double> x; double y; };
-
-struct Split { int feature; double threshold; double score; // reduction in mse (higher is better)
-    vector<int> left_idx; vector<int> right_idx; };
-
-struct Node {
-    bool is_leaf = false;
-    double value = 0.0; // mean target if leaf
-    int feature = -1;
-    double threshold = 0.0;
-    Node* left = nullptr;
-    Node* right = nullptr;
-    ~Node(){ delete left; delete right; }
-};
-
-// Utility: compute mean and MSE of targets for indices
-pair<double,double> mean_and_mse(const vector<Row>& data, const vector<int>& idx){
-    double sum = 0; int n = idx.size();
-    for(int i: idx) sum += data[i].y;
-    double mean = n? sum / n : 0.0;
-    double mse = 0;
-    for(int i: idx){ double d = data[i].y - mean; mse += d*d; }
-    return {mean, mse};
+/**
+ * @brief Calcule la moyenne d'un vecteur.
+ * 
+ * @param values Vecteur contenant des nombres.
+ * @return La moyenne des valeurs.
+ */
+double mean(const std::vector<double>& values) {
+    double sum = 0.0;
+    for(double v : values) {
+        sum += v;
+    }
+    return sum / values.size();
 }
 
-// Find best split for given set of indices
-Split find_best_split(const vector<Row>& data, const vector<int>& idx, int min_samples_split){
-    Split best; best.feature = -1; best.threshold = 0; best.score = 0; 
-    int n = idx.size();
-    if(n < 2 * min_samples_split) return best; // no valid split
+/**
+ * @brief Calcule l'erreur quadratique moyenne (MSE).
+ * 
+ * Le MSE mesure à quel point les valeurs s'écartent de la moyenne du nœud.
+ * 
+ * @param values Vecteur des valeurs cibles (performances).
+ * @return Le MSE du vecteur.
+ */
+double mse(const std::vector<double>& values) {
+    double m = mean(values);
+    double sum = 0.0;
 
-    int m = data[0].x.size();
-    // Precompute targets and total mse
-    auto [parent_mean, parent_mse] = mean_and_mse(data, idx);
+    for(double v : values) {
+        sum += (v - m) * (v - m);
+    }
+    return sum;
+}
 
-    // For each feature, collect (value, index) and sort
-    for(int f=0; f<m; ++f){
-        vector<pair<double,int>> vals; vals.reserve(n);
-        for(int i: idx) vals.emplace_back(data[i].x[f], i);
-        sort(vals.begin(), vals.end(), [](auto &a, auto &b){ return a.first < b.first; });
+/**
+ * @brief Structure d'un nœud d'arbre de décision.
+ */
+struct Node {
+    bool is_leaf = false;
+    int samples = 0;
+    int feature_index = -1;
+    double threshold = 0.0;
+    double value = 0.0;
 
-        // prefix sums for efficient left mean/mse calculation
-        vector<double> pref_y(n+1, 0.0);
-        for(int i=0;i<n;++i) pref_y[i+1] = pref_y[i] + data[vals[i].second].y;
+    Node* left = nullptr;
+    Node* right = nullptr;
+};
 
-        // scan splits between unique values
-        for(int s = min_samples_split; s <= n - min_samples_split; ++s){
-            double vleft = vals[s-1].first;
-            double vright = vals[s].first;
-            if(vleft == vright) continue; // no meaningful split
-            double thr = (vleft + vright)/2.0;
+#define MAX_DEPTH 10
+#define MIN_SAMPLES 3
+#define MSE_MAX 1e12
 
-            int nl = s; int nr = n - s;
-            double sumL = pref_y[s]; double sumR = pref_y[n] - sumL;
-            double meanL = sumL / nl; double meanR = sumR / nr;
-            double mseL = 0, mseR = 0;
-            for(int i=0;i<s;++i){ double d = data[vals[i].second].y - meanL; mseL += d*d; }
-            for(int i=s;i<n;++i){ double d = data[vals[i].second].y - meanR; mseR += d*d; }
+/**
+ * @brief Construit récursivement un arbre de décision de régression.
+ * 
+ * @param X Matrice des features (n échantillons × m features)
+ * @param y Vecteur de performances (n valeurs)
+ * @param depth Profondeur actuelle dans l'arbre
+ * @return Un pointeur vers le nœud créé (racine ou sous-noeud)
+ */
+Node* build_tree(const std::vector<std::vector<double>>& X,
+                 const std::vector<double>& y,
+                 int depth = 0) 
+{
+    Node* node = new Node();
+    node->samples = y.size();
 
-            double weighted_mse = mseL + mseR;
-            double reduction = parent_mse - weighted_mse;
-            if(reduction > best.score){
-                best.score = reduction;
-                best.feature = f;
-                best.threshold = thr;
-                // store left and right indices
-                best.left_idx.clear(); best.right_idx.clear();
-                best.left_idx.reserve(nl); best.right_idx.reserve(nr);
-                for(int i=0;i<n;++i){
-                    if(data[vals[i].second].x[f] <= thr) best.left_idx.push_back(vals[i].second);
-                    else best.right_idx.push_back(vals[i].second);
-                }
+    // Stop Rules
+    if (depth >= MAX_DEPTH || y.size() <= MIN_SAMPLES) {
+        node->is_leaf = true;
+        node->value = mean(y);
+        return node;
+    }
+
+    int n = X.size();
+    int m = X[0].size();
+
+    double best_mse = MSE_MAX;
+    int best_feature = -1;
+    double best_threshold = 0.0;
+
+    // On cherche le meilleur split (feature + seuil)
+    for (int feature = 0; feature < m; ++feature) {
+        for (int row = 0; row < n; ++row) {
+
+            double threshold = X[row][feature];
+
+            std::vector<double> left_y, right_y;
+
+            // Séparation des données selon le threshold
+            for (int i = 0; i < n; ++i) {
+                if (X[i][feature] <= threshold)  
+                    left_y.push_back(y[i]);
+                else
+                    right_y.push_back(y[i]);
+            }
+
+            double mse_split = 
+                left_y.size() * mse(left_y) +
+                right_y.size() * mse(right_y);
+
+            mse_split /= n;
+
+            if (mse_split < best_mse) {
+                best_mse = mse_split;
+                best_feature = feature;
+                best_threshold = threshold;
             }
         }
     }
-    return best;
-}
 
-Node* build_tree(const vector<Row>& data, const vector<int>& idx, int max_depth, int min_samples_split, int depth=0){
-    Node* node = new Node();
-    auto [mean, mse] = mean_and_mse(data, idx);
-    node->value = mean;
-    if(depth >= max_depth || (int)idx.size() < 2*min_samples_split){
-        node->is_leaf = true; return node;
+    // Si aucun split n'est bon, on stoppe
+    if (best_feature == -1) {
+        node->is_leaf = true;
+        node->value = mean(y);
+        return node;
     }
-    Split s = find_best_split(data, idx, min_samples_split);
-    if(s.feature == -1 || s.left_idx.empty() || s.right_idx.empty()){
-        node->is_leaf = true; return node;
+
+    node->feature_index = best_feature;
+    node->threshold = best_threshold;
+
+    //  Séparation finale pour construire les enfants
+    std::vector<std::vector<double>> X_left, X_right;
+    std::vector<double> y_left, y_right;
+
+    for (int i = 0; i < n; ++i) {
+        if (X[i][best_feature] <= best_threshold) {
+            X_left.push_back(X[i]);
+            y_left.push_back(y[i]);
+        } else {
+            X_right.push_back(X[i]);
+            y_right.push_back(y[i]);
+        }
     }
-    node->feature = s.feature;
-    node->threshold = s.threshold;
-    node->left = build_tree(data, s.left_idx, max_depth, min_samples_split, depth+1);
-    node->right = build_tree(data, s.right_idx, max_depth, min_samples_split, depth+1);
+
+    node->left = build_tree(X_left, y_left, depth + 1);
+    node->right = build_tree(X_right, y_right, depth + 1);
+
     return node;
 }
 
-double predict_one(const Node* node, const vector<double>& x){
-    const Node* cur = node;
-    while(cur && !cur->is_leaf){
-        if(x[cur->feature] <= cur->threshold) cur = cur->left;
-        else cur = cur->right;
-    }
-    return cur? cur->value : 0.0;
+/**
+ * @brief Prédit une valeur à partir d'un échantillon en parcourant l'arbre.
+ * 
+ * @param node Pointeur vers la racine ou un nœud interne.
+ * @param sample Vecteur des features d'un échantillon.
+ * @return La valeur prédite (moyenne dans une feuille).
+ */
+double predict(Node* node, const std::vector<double>& sample) {
+    if (node->is_leaf) 
+        return node->value;
+
+    if (sample[node->feature_index] <= node->threshold)
+        return predict(node->left, sample);
+    else
+        return predict(node->right, sample);
 }
 
-vector<Row> load_csv(const string& path){
-    ifstream in(path);
-    if(!in) throw runtime_error("Could not open file: " + path);
-    string line;
-    vector<Row> data;
-    // Read first line to detect header or data
-    if(!getline(in, line)) return data;
-    auto split_line = [&](const string &ln){
-        vector<string> tokens; string cur; bool inquote=false;
-        for(char c: ln){
-            if(c=='\"') inquote = !inquote;
-            else if(c==',' && !inquote){ tokens.push_back(cur); cur.clear(); }
-            else cur.push_back(c);
-        }
-        tokens.push_back(cur);
-        return tokens;
+/**
+ * @brief Programme principal : construit un arbre avec tes données.
+ */
+int main() {
+
+    // -------------------------
+    // TEST 10 échantillons
+    // -------------------------
+    std::vector<std::vector<double>> test_features = {
+        {18,8,4784,4974,43,213,53,5,27,30},
+        {22,3,2427,3109,108,29,2,92,4,7},
+        {11,9,3426,2805,94,15,98,70,10,21},
+        {22,20,4756,2779,153,230,18,32,24,11},
+        {22,30,1328,3868,249,197,19,66,31,13},
+        {11,18,4167,1397,56,175,42,42,12,31},
+        {16,6,1646,2044,69,46,53,97,31,19},
+        {8,5,1115,1111,111,20,35,67,22,24},
+        {26,13,2668,1348,159,124,28,35,25,13},
+        {19,12,2916,3957,49,118,13,72,16,29}
     };
-    vector<string> first_tokens = split_line(line);
-    bool header = false;
-    // check if all tokens numeric
-    auto is_number = [&](const string &s){ if(s.empty()) return false; char* endptr = nullptr; strtod(s.c_str(), &endptr); return *endptr==0; };
-    for(const string &t : first_tokens) if(!is_number(t)) { header = true; break; }
 
-    if(!header){
-        // parse first line as data
-        Row r; r.x.clear();
-        for(size_t i=0;i+1<first_tokens.size();++i) r.x.push_back(stod(first_tokens[i]));
-        r.y = stod(first_tokens.back());
-        data.push_back(move(r));
-    }
-    // read remaining lines
-    while(getline(in, line)){
-        if(line.empty()) continue;
-        vector<string> toks = split_line(line);
-        if(toks.size() < 2) continue;
-        Row r; r.x.clear();
-        try{
-            for(size_t i=0;i+1<toks.size();++i) r.x.push_back(stod(toks[i]));
-            r.y = stod(toks.back());
-        } catch(...){
-            throw runtime_error("Non-numeric value encountered in CSV (line: '" + line + "')");
-        }
-        data.push_back(move(r));
-    }
-    return data;
+    std::vector<double> test_performance = {
+        0.130534, 0.0321952, 0.0374015, 
+        0.0576987, 0.0209786, 0.027608, 
+        0.0305594, 0.0263897, 0.0271464, 
+        0.0403354
+    };
+
+   
+    Node* my_tree = build_tree(test_features, test_performance);
+
+    double prediction = predict(my_tree, test_features[0]);
+
+   std::cout << "\nPredictions pour toutes les lignes :\n";
+
+   for (size_t i = 0; i < test_features.size(); ++i) {
+        double p = predict(my_tree, test_features[i]);
+        std::cout << "Ligne " << i+1 << " -> prediction = " << p
+              << " | valeur réelle = " << test_performance[i] << std::endl;
 }
 
-// simple RMSE
-double rmse(const vector<double>& pred, const vector<double>& truth){
-    if(pred.size()!=truth.size()) throw runtime_error("Size mismatch in rmse");
-    double s=0; for(size_t i=0;i<pred.size();++i){ double d = pred[i]-truth[i]; s += d*d; }
-    return sqrt(s/pred.size());
-}
 
-int main(int argc, char** argv){
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    if(argc < 2){ cerr << "Usage: " << argv[0] << " data.csv [max_depth=10] [min_samples_split=5]\n"; return 1; }
-    string path = argv[1];
-    int max_depth = 10; int min_samples_split = 5;
-    if(argc >= 3) max_depth = stoi(argv[2]);
-    if(argc >= 4) min_samples_split = stoi(argv[3]);
-
-    vector<Row> data;
-    try{ data = load_csv(path); }
-    catch(const exception &e){ cerr << "Error loading CSV: " << e.what() << '\n'; return 2; }
-    if(data.empty()){ cerr << "No data found in CSV\n"; return 3; }
-    int n = data.size();
-    cerr << "Loaded " << n << " rows, " << data[0].x.size() << " features.\n";
-
-    // Shuffle and split train/test (80/20)
-    vector<int> idx(n); iota(idx.begin(), idx.end(), 0);
-    mt19937_64 rng(123456);
-    shuffle(idx.begin(), idx.end(), rng);
-    int ntrain = max(1, int(0.8 * n));
-    vector<int> train_idx(idx.begin(), idx.begin()+ntrain);
-    vector<int> test_idx(idx.begin()+ntrain, idx.end());
-
-    Node* root = build_tree(data, train_idx, max_depth, min_samples_split);
-
-    // predictions
-    vector<double> preds_train; preds_train.reserve(train_idx.size());
-    vector<double> truth_train; truth_train.reserve(train_idx.size());
-    for(int i: train_idx){ preds_train.push_back(predict_one(root, data[i].x)); truth_train.push_back(data[i].y); }
-    vector<double> preds_test; preds_test.reserve(test_idx.size());
-    vector<double> truth_test; truth_test.reserve(test_idx.size());
-    for(int i: test_idx){ preds_test.push_back(predict_one(root, data[i].x)); truth_test.push_back(data[i].y); }
-
-    cerr << fixed << setprecision(6);
-    cerr << "Train RMSE: " << rmse(preds_train, truth_train) << " (n="<<preds_train.size()<<")\n";
-    cerr << "Test  RMSE: " << rmse(preds_test, truth_test) << " (n="<<preds_test.size()<<")\n";
-
-    // Example: predict first 5 test rows and print
-    cerr << "\nFirst 5 test predictions (pred -> true):\n";
-    for(int i=0;i<min<int>(5, test_idx.size()); ++i){
-        int id = test_idx[i];
-        double p = predict_one(root, data[id].x);
-        cerr << p << " -> " << data[id].y << "\n";
-    }
-
-    // cleanup
-    delete root;
     return 0;
 }
+
