@@ -9,8 +9,8 @@
 
 double mean(const std::vector<double>& x){
     double sum = 0;
-    for (double i = *x.begin(); i < *x.end(); ++i){
-        sum = i+sum;
+    for (double i = 0; i < x.size(); ++i){
+        sum = x[i]+sum;
     }
     sum /= x.size();
     return sum;
@@ -20,8 +20,8 @@ double mse(const std::vector<double>& y){ // the formula for mse is the sum of (
     // for each value of the node, the desired value is the mean of the values within the node 
     double sum = 0;
     double m = mean(y);
-    for (auto j = *y.begin(); j < *y.end(); ++j){
-        sum += pow((j-m),2);
+    for (auto j = 0; j < y.size(); ++j){
+        sum += pow((y[j]-m),2);
     }
     return sum;
 }
@@ -38,7 +38,7 @@ struct Stop_rule {
 */ 
 
 # define MAX_DEPTH 25
-# define MIN_SAMPLES 5
+# define MIN_SAMPLES 1
 # define MSE_MAX 100
 
 Node* tree (const std::vector<std::vector<double>>& Features, const std::vector<double>& Performance, int depth = 0){
@@ -69,16 +69,16 @@ Node* tree (const std::vector<std::vector<double>>& Features, const std::vector<
 
             for (auto k = 0; k < n ; ++k){
                 if(Features[k][i] <= threshold){
-                    left.push_back(Performance[j]); 
+                    left.push_back(Performance[k]); 
                 }
-                else {right.push_back(Performance[j]);}
+                else {right.push_back(Performance[k]);}
             }
 
             double mse_ = (left.size()*mse(left) + right.size()*mse(right)) / n;
 
             if (mse_ < mse_opt){ // if the mse is smaller, we keep it as optimal, along with the feature used and the threshold used
                 mse_opt = mse_;
-                feature_opt = Features[0][i];
+                feature_opt = i;
                 threshold_opt = threshold;
             }
         }
@@ -113,12 +113,11 @@ Node* tree (const std::vector<std::vector<double>>& Features, const std::vector<
 
     node->left = tree(Features_left, Performance_left, depth+1);
     node->right = tree(Features_right, Performance_right, depth+1);
-    return node;
 
+    return node;
 }
 
-// predicting new data
-    
+// to predict new data
 double predict(Node* node, const std::vector<double>& x){
     if(node->is_leaf) {
         return node->value;
@@ -164,10 +163,9 @@ int main(){
 {8,5,1115,1111,111,20,35,67,22,24},
 {26,13,2668,1348,159,124,28,35,25,13},
 {19,12,2916,3957,49,118,13,72,16,29}};
-    std::vector<double> test_performance {0.130534,0.0321952,0.0374015,0.0576987,0.0209786,0.027608,0.0305594,0.0263897,0.0271464,0.0403354};
+    std::vector<double> test_performance {0.130534, 0.0321952, 0.0374015, 0.0576987, 0.0209786, 0.027608, 0.0305594, 0.0263897, 0.0271464, 0.0403354 };
     // print_vec(test_performance);
     // print_vec_vec(test_features);
     tree(test_features,test_performance);
-    
 
 }
