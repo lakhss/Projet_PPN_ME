@@ -221,6 +221,36 @@ int main() {
               << " | valeur réelle = " << test_performance[i] << std::endl;
 }
 
+    // === Second test ===
+    std::vector<std::vector<double>> test_features2 = {
+        {17,6,2396,4667,182,25,16,40,31,18},
+        {5,27,3047,4121,145,194,3,55,1,5},
+        {8,0,1616,3255,106,68,23,78,26,27},
+        {2,17,1289,2160,115,193,31,47,28,10},
+        {2,4,4171,3115,137,11,68,47,13,27},
+        {28,7,1710,3916,80,208,15,3,26,24},
+        {24,26,1234,1252,70,35,73,92,20,1},
+        {9,14,3150,1625,249,198,50,5,7,28},
+        {11,11,3154,4932,189,169,23,41,20,9},
+        {10,8,3273,2260,81,253,58,85,26,27}
+        // tu peux ajouter toutes les autres lignes ici de la même manière
+    };
+    std::vector<double> test_performance2 = {
+        0.198022,0.0549579,0.0212354,0.0229885,0.145877,
+        0.0329989,0.0197994,0.0355665,0.0535637,0.0434353
+        // idem, ajoute toutes les valeurs de performance correspondantes
+    };
+
+    Node* tree2 = build_tree(test_features2, test_performance2);
+
+    std::cout << "\nPredictions for second test set:\n";
+    for (size_t i = 0; i < test_features2.size(); ++i) {
+        double p = predict(tree2, test_features2[i]);
+        std::cout << "Sample " << i+1
+                  << " -> predicted = " << p
+                  << " | actual = " << test_performance2[i] << "\n";
+    }
+
 
     return 0;
 }
