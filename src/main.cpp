@@ -2,9 +2,17 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include "decision_tree.cpp"   // on inclut ton fichier directement
+#include "decision_tree.cpp"   
 
-// Chargement CSV sans dépendances
+/**
+ * @brief Loads a CSV file into feature matrix X and target vector y.
+ * 
+ * The last column of each row is considered as the target value.
+ * 
+ * @param filename Path to the CSV file.
+ * @param X Output feature matrix (each row is a sample, columns are features).
+ * @param y Output target vector (last column of each row in the CSV).
+ */
 void load_csv(const std::string& filename,
               std::vector<std::vector<double>>& X,
               std::vector<double>& y)
@@ -17,7 +25,7 @@ void load_csv(const std::string& filename,
         std::vector<double> row;
         double value;
 
-        // Toutes les colonnes sauf la dernière → features
+        // Read all values in the line, separated by commas
         while (ss >> value) {
             row.push_back(value);
             if (ss.peek() == ',') ss.ignore();
@@ -25,33 +33,37 @@ void load_csv(const std::string& filename,
 
         if (row.empty()) continue;
 
-        y.push_back(row.back());       // dernière colonne = target
-        row.pop_back();                // on retire le target
+        y.push_back(row.back());  // last value is the target
+        row.pop_back();            // remove target from feature row
         X.push_back(row);
     }
 }
 
+/**
+ * @brief Main program to load CSV, build decision tree, and make predictions.
+ * 
+ * @return int Exit status.
+ */
 int main() {
-    std::vector<std::vector<double>> X;
-    std::vector<double> y;
+    std::vector<std::vector<double>> X; ///< feature matrix
+    std::vector<double> y;              ///< target vector
 
-    // 1. Lecture du CSV
+    // Load CSV dataset
     load_csv("../datasets/15k_ga_adaptive.csv", X, y);
 
-    std::cout << "CSV lu : " << X.size() << " lignes, "
+    std::cout << "CSV read: " << X.size() << " rows, "
               << X[0].size() << " features." << std::endl;
 
-    // 2. Construction de l'arbre
+    // Build decision tree
     Node* tree = build_tree(X, y);
 
-    // 3. Prédiction de toutes les lignes
+    // Make predictions for each row
     std::cout << "\n--- PREDICTIONS ---\n";
-
     for (size_t i = 0; i < X.size(); i++) {
         double p = predict(tree, X[i]);
-        std::cout << "Ligne " << i+1
-                  << " -> prédiction = " << p
-                  << " | réelle = " << y[i] << "\n";
+        std::cout << "Row " << i+1
+                  << " -> prediction = " << p
+                  << " | actual = " << y[i] << "\n";
     }
 
     return 0;
