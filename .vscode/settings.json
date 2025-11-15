@@ -7,6 +7,9 @@
         "shared_mutex": "cpp",
         "source_location": "cpp",
         "stacktrace": "cpp",
-        "syncstream": "cpp"
+        "syncstream": "cpp",
+        "iosfwd": "cpp",
+        "deque": "cpp",
+        "string": "cpp"
     }
 }
