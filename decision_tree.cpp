@@ -5,10 +5,10 @@
 
 
 /**
- * @brief Calcule la moyenne d'un vecteur.
- * 
- * @param values Vecteur contenant des nombres.
- * @return La moyenne des valeurs.
+ * @brief Computes the arithmetic mean of a vector.
+ * @param values Vector of numbers.
+ * @return Mean of the values.
+ * @note Used to predict the value at a leaf and to calculate the variance (MSE).
  */
 double mean(const std::vector<double>& values) {
     double sum = 0.0;
@@ -19,10 +19,10 @@ double mean(const std::vector<double>& values) {
 }
 
 /**
- * @brief Calcule l'erreur quadratique moyenne (MSE) — la moyenne des carrés des écarts.
- *
- * @param values Vecteur des valeurs cibles (performances).
- * @return Le MSE (somme des (v-mean)^2 divisée par n). Retourne 0 si values.empty().
+ * @brief Computes the variance of a vector (Mean Squared Error, MSE).
+ * @param values Vector of real values.
+ * @return Variance = mean of squared differences from the mean. Returns 0 if empty.
+ * @note Used to evaluate the quality of a split in the decision tree.
  */
 double mse(const std::vector<double>& values) {
     if (values.empty()) return 0.0;
@@ -36,7 +36,14 @@ double mse(const std::vector<double>& values) {
 
 }
 /**
- * @brief Structure d'un nœud d'arbre de décision.
+ * @brief Decision tree node.
+ * 
+ * is_leaf: true if leaf.
+ * samples: number of samples in the node.
+ * feature_index: feature used for split (-1 if leaf).
+ * threshold: split value.
+ * value: predicted value if leaf.
+ * left/right: child nodes.
  */
 struct Node {
     bool is_leaf = false;
@@ -54,12 +61,12 @@ struct Node {
 #define MSE_MAX 1e12
 
 /**
- * @brief Construit récursivement un arbre de décision de régression.
+ * @brief Recursively builds a regression decision tree.
  * 
- * @param X Matrice des features (n échantillons × m features)
- * @param y Vecteur de performances (n valeurs)
- * @param depth Profondeur actuelle dans l'arbre
- * @return Un pointeur vers le nœud créé (racine ou sous-noeud)
+ * @param X Feature matrix (n samples × m features)
+ * @param y Vector of target values (n values)
+ * @param depth Current depth in the tree
+ * @return Pointer to the created node (root or subtree)
  */
 Node* build_tree(const std::vector<std::vector<double>>& X,
                  const std::vector<double>& y,
@@ -70,15 +77,15 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
 
     double current_mse = mse(y);
 
-    // Stop conditions améliorées
+    // Stop conditions: max depth, few samples, or very small variance
     if (depth >= MAX_DEPTH || y.size() <= MIN_SAMPLES || current_mse < 1e-6) {
         node->is_leaf = true;
         node->value = mean(y);
         return node;
     }
 
-    int n = X.size();
-    int m = X[0].size();
+    int n = X.size();        // number of samples
+    int m = X[0].size();    // number of features
 
     double best_mse = MSE_MAX;
     int best_feature = -1;
@@ -86,7 +93,7 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
 
     for (int feature = 0; feature < m; ++feature) {
 
-        // Trier les valeurs du feature
+         // Collect and sort all values of this feature
         std::vector<double> sorted_values;
         sorted_values.reserve(n);
 
@@ -95,13 +102,15 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
 
         std::sort(sorted_values.begin(), sorted_values.end());
 
-        // Tester des seuils intelligents (valeurs intermédiaires)
+        // Test thresholds between consecutive values
         for (int i = 0; i < n - 1; ++i) {
 
             double threshold = (sorted_values[i] + sorted_values[i+1]) / 2.0;
 
             std::vector<double> left_y, right_y;
+             
 
+            // Split target values according to threshold
             for (int k = 0; k < n; ++k) {
                 if (X[k][feature] <= threshold)
                     left_y.push_back(y[k]);
@@ -111,7 +120,8 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
 
             if (left_y.empty() || right_y.empty())
                 continue;
-
+            
+            // Compute weighted MSE for this split
             double mse_split =
                 (left_y.size() * mse(left_y) +
                  right_y.size() * mse(right_y)) / n;
@@ -154,11 +164,11 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
 
 
 /**
- * @brief Prédit une valeur à partir d'un échantillon en parcourant l'arbre.
+ * @brief Predicts a value for a sample by traversing the tree.
  * 
- * @param node Pointeur vers la racine ou un nœud interne.
- * @param sample Vecteur des features d'un échantillon.
- * @return La valeur prédite (moyenne dans une feuille).
+ * @param node Pointer to the root or current node.
+ * @param sample Vector of features for a single sample.
+ * @return Predicted value (mean stored in a leaf).
  */
 double predict(Node* node, const std::vector<double>& sample) {
     if (node->is_leaf) 
@@ -171,13 +181,13 @@ double predict(Node* node, const std::vector<double>& sample) {
 }
 
 /**
- * @brief Programme principal : construit un arbre avec tes données.
+ * @brief Main program: builds a decision tree with test data.
  */
 int main() {
 
-    // -------------------------
-    // TEST 10 échantillons
-    // -------------------------
+
+     // TEST 10 samples 
+     
     std::vector<std::vector<double>> test_features = {
         {18,8,4784,4974,43,213,53,5,27,30},
         {22,3,2427,3109,108,29,2,92,4,7},
