@@ -1,35 +1,33 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <vector>
-#include <algorithm>
-#include <chrono>
-#include "DataLoader.hpp"
-#include "DecisionTreeRegressor.hpp"
+#include "decision_tree.cpp"   // on inclut ton fichier directement
 
-void train_test_split(
-    const std::vector<std::vector<double>>& X,
-    const std::vector<double>& y,
-    double test_ratio,
-    std::vector<std::vector<double>>& X_train,
-    std::vector<std::vector<double>>& X_test,
-    std::vector<double>& y_train,
-    std::vector<double>& y_test
-) {
-    size_t n = X.size();
-    size_t n_test = static_cast<size_t>(n * test_ratio);
+// Chargement CSV sans dépendances
+void load_csv(const std::string& filename,
+              std::vector<std::vector<double>>& X,
+              std::vector<double>& y)
+{
+    std::ifstream file(filename);
+    std::string line;
 
-    // indices mélangés
-    std::vector<int> indices(n);
-    for (size_t i = 0; i < n; i++) indices[i] = i;
-    std::random_shuffle(indices.begin(), indices.end());
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::vector<double> row;
+        double value;
 
-    for (size_t i = 0; i < n; i++) {
-        if (i < n_test) {
-            X_test.push_back(X[indices[i]]);
-            y_test.push_back(y[indices[i]]);
-        } else {
-            X_train.push_back(X[indices[i]]);
-            y_train.push_back(y[indices[i]]);
+        // Toutes les colonnes sauf la dernière → features
+        while (ss >> value) {
+            row.push_back(value);
+            if (ss.peek() == ',') ss.ignore();
         }
+
+        if (row.empty()) continue;
+
+        y.push_back(row.back());       // dernière colonne = target
+        row.pop_back();                // on retire le target
+        X.push_back(row);
     }
 }
 
@@ -37,43 +35,24 @@ int main() {
     std::vector<std::vector<double>> X;
     std::vector<double> y;
 
-    // === 1. Lire ton CSV ===
-    DataLoader::load_csv("15k_ga_adaptive.csv", X, y);
+    // 1. Lecture du CSV
+    load_csv("../datasets/15k_ga_adaptive.csv", X, y);
 
-    std::cout << "CSV chargé : " << X.size() << " lignes, " << X[0].size()
-              << " features." << std::endl;
+    std::cout << "CSV lu : " << X.size() << " lignes, "
+              << X[0].size() << " features." << std::endl;
 
-    // === 2. Split train/test ===
-    std::vector<std::vector<double>> X_train, X_test;
-    std::vector<double> y_train, y_test;
+    // 2. Construction de l'arbre
+    Node* tree = build_tree(X, y);
 
-    train_test_split(X, y, 0.2, X_train, X_test, y_train, y_test);
+    // 3. Prédiction de toutes les lignes
+    std::cout << "\n--- PREDICTIONS ---\n";
 
-    std::cout << "Train = " << X_train.size()
-              << " | Test = " << X_test.size() << std::endl;
-
-    // === 3. Entraîner l’arbre ===
-    DecisionTreeRegressor tree;
-    tree.max_depth = 12;
-    tree.min_samples_split = 10;
-
-    auto start = std::chrono::high_resolution_clock::now();
-    tree.fit(X_train, y_train);
-    auto end = std::chrono::high_resolution_clock::now();
-
-    double train_time = std::chrono::duration<double>(end - start).count();
-
-    // === 4. MSE sur test ===
-    double mse = 0.0;
-    for (size_t i = 0; i < X_test.size(); i++) {
-        double pred = tree.predict(X_test[i]);
-        double err = pred - y_test[i];
-        mse += err * err;
+    for (size_t i = 0; i < X.size(); i++) {
+        double p = predict(tree, X[i]);
+        std::cout << "Ligne " << i+1
+                  << " -> prédiction = " << p
+                  << " | réelle = " << y[i] << "\n";
     }
-    mse /= X_test.size();
-
-    std::cout << "MSE sur test = " << mse << std::endl;
-    std::cout << "Temps d'entraînement : " << train_time << " s\n";
 
     return 0;
 }
