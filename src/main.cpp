@@ -2,7 +2,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include "decision_tree.cpp"   
+#include "decision_tree.hpp"
+
 
 /**
  * @brief Loads a CSV file into feature matrix X and target vector y.
