@@ -1,12 +1,14 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <algorithm>
+
 
 /**
- * @brief Calcule la moyenne d'un vecteur.
- * 
- * @param values Vecteur contenant des nombres.
- * @return La moyenne des valeurs.
+ * @brief Computes the arithmetic mean of a vector.
+ * @param values Vector of numbers.
+ * @return Mean of the values.
+ * @note Used to predict the value at a leaf and to calculate the variance (MSE).
  */
 double mean(const std::vector<double>& values) {
     double sum = 0.0;
@@ -17,25 +19,31 @@ double mean(const std::vector<double>& values) {
 }
 
 /**
- * @brief Calcule l'erreur quadratique moyenne (MSE).
- * 
- * Le MSE mesure à quel point les valeurs s'écartent de la moyenne du nœud.
- * 
- * @param values Vecteur des valeurs cibles (performances).
- * @return Le MSE du vecteur.
+ * @brief Computes the variance of a vector (Mean Squared Error, MSE).
+ * @param values Vector of real values.
+ * @return Variance = mean of squared differences from the mean. Returns 0 if empty.
+ * @note Used to evaluate the quality of a split in the decision tree.
  */
 double mse(const std::vector<double>& values) {
+    if (values.empty()) return 0.0;
     double m = mean(values);
     double sum = 0.0;
-
-    for(double v : values) {
-        sum += (v - m) * (v - m);
+    for (double v : values) {
+        double d = v - m;
+        sum += d * d;
     }
-    return sum;
-}
+    return sum / static_cast<double>(values.size());
 
+}
 /**
- * @brief Structure d'un nœud d'arbre de décision.
+ * @brief Decision tree node.
+ * 
+ * is_leaf: true if leaf.
+ * samples: number of samples in the node.
+ * feature_index: feature used for split (-1 if leaf).
+ * threshold: split value.
+ * value: predicted value if leaf.
+ * left/right: child nodes.
  */
 struct Node {
     bool is_leaf = false;
@@ -53,55 +61,70 @@ struct Node {
 #define MSE_MAX 1e12
 
 /**
- * @brief Construit récursivement un arbre de décision de régression.
+ * @brief Recursively builds a regression decision tree.
  * 
- * @param X Matrice des features (n échantillons × m features)
- * @param y Vecteur de performances (n valeurs)
- * @param depth Profondeur actuelle dans l'arbre
- * @return Un pointeur vers le nœud créé (racine ou sous-noeud)
+ * @param X Feature matrix (n samples × m features)
+ * @param y Vector of target values (n values)
+ * @param depth Current depth in the tree
+ * @return Pointer to the created node (root or subtree)
  */
 Node* build_tree(const std::vector<std::vector<double>>& X,
                  const std::vector<double>& y,
-                 int depth = 0) 
+                 int depth = 0)
 {
     Node* node = new Node();
     node->samples = y.size();
 
-    // Stop Rules
-    if (depth >= MAX_DEPTH || y.size() <= MIN_SAMPLES) {
+    double current_mse = mse(y);
+
+    // Stop conditions: max depth, few samples, or very small variance
+    if (depth >= MAX_DEPTH || y.size() <= MIN_SAMPLES || current_mse < 1e-6) {
         node->is_leaf = true;
         node->value = mean(y);
         return node;
     }
 
-    int n = X.size();
-    int m = X[0].size();
+    int n = X.size();        // number of samples
+    int m = X[0].size();    // number of features
 
     double best_mse = MSE_MAX;
     int best_feature = -1;
     double best_threshold = 0.0;
 
-    // On cherche le meilleur split (feature + seuil)
     for (int feature = 0; feature < m; ++feature) {
-        for (int row = 0; row < n; ++row) {
 
-            double threshold = X[row][feature];
+         // Collect and sort all values of this feature
+        std::vector<double> sorted_values;
+        sorted_values.reserve(n);
+
+        for (auto &row : X)
+            sorted_values.push_back(row[feature]);
+
+        std::sort(sorted_values.begin(), sorted_values.end());
+
+        // Test thresholds between consecutive values
+        for (int i = 0; i < n - 1; ++i) {
+
+            double threshold = (sorted_values[i] + sorted_values[i+1]) / 2.0;
 
             std::vector<double> left_y, right_y;
+             
 
-            // Séparation des données selon le threshold
-            for (int i = 0; i < n; ++i) {
-                if (X[i][feature] <= threshold)  
-                    left_y.push_back(y[i]);
+            // Split target values according to threshold
+            for (int k = 0; k < n; ++k) {
+                if (X[k][feature] <= threshold)
+                    left_y.push_back(y[k]);
                 else
-                    right_y.push_back(y[i]);
+                    right_y.push_back(y[k]);
             }
 
-            double mse_split = 
-                left_y.size() * mse(left_y) +
-                right_y.size() * mse(right_y);
-
-            mse_split /= n;
+            if (left_y.empty() || right_y.empty())
+                continue;
+            
+            // Compute weighted MSE for this split
+            double mse_split =
+                (left_y.size() * mse(left_y) +
+                 right_y.size() * mse(right_y)) / n;
 
             if (mse_split < best_mse) {
                 best_mse = mse_split;
@@ -111,7 +134,6 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
         }
     }
 
-    // Si aucun split n'est bon, on stoppe
     if (best_feature == -1) {
         node->is_leaf = true;
         node->value = mean(y);
@@ -121,7 +143,6 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
     node->feature_index = best_feature;
     node->threshold = best_threshold;
 
-    //  Séparation finale pour construire les enfants
     std::vector<std::vector<double>> X_left, X_right;
     std::vector<double> y_left, y_right;
 
@@ -141,12 +162,13 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
     return node;
 }
 
+
 /**
- * @brief Prédit une valeur à partir d'un échantillon en parcourant l'arbre.
+ * @brief Predicts a value for a sample by traversing the tree.
  * 
- * @param node Pointeur vers la racine ou un nœud interne.
- * @param sample Vecteur des features d'un échantillon.
- * @return La valeur prédite (moyenne dans une feuille).
+ * @param node Pointer to the root or current node.
+ * @param sample Vector of features for a single sample.
+ * @return Predicted value (mean stored in a leaf).
  */
 double predict(Node* node, const std::vector<double>& sample) {
     if (node->is_leaf) 
@@ -159,13 +181,13 @@ double predict(Node* node, const std::vector<double>& sample) {
 }
 
 /**
- * @brief Programme principal : construit un arbre avec tes données.
+ * @brief Main program: builds a decision tree with test data.
  */
 int main() {
 
-    // -------------------------
-    // TEST 10 échantillons
-    // -------------------------
+
+     // TEST 10 samples 
+     
     std::vector<std::vector<double>> test_features = {
         {18,8,4784,4974,43,213,53,5,27,30},
         {22,3,2427,3109,108,29,2,92,4,7},
@@ -198,6 +220,35 @@ int main() {
         std::cout << "Ligne " << i+1 << " -> prediction = " << p
               << " | valeur réelle = " << test_performance[i] << std::endl;
 }
+
+    // === Second test ===
+    std::vector<std::vector<double>> test_features2 = {
+        {17,6,2396,4667,182,25,16,40,31,18},
+        {5,27,3047,4121,145,194,3,55,1,5},
+        {8,0,1616,3255,106,68,23,78,26,27},
+        {2,17,1289,2160,115,193,31,47,28,10},
+        {2,4,4171,3115,137,11,68,47,13,27},
+        {28,7,1710,3916,80,208,15,3,26,24},
+        {24,26,1234,1252,70,35,73,92,20,1},
+        {9,14,3150,1625,249,198,50,5,7,28},
+        {11,11,3154,4932,189,169,23,41,20,9},
+        {10,8,3273,2260,81,253,58,85,26,27}
+        
+    };
+    std::vector<double> test_performance2 = {
+        0.198022,0.0549579,0.0212354,0.0229885,0.145877,
+        0.0329989,0.0197994,0.0355665,0.0535637,0.0434353
+    };
+
+    Node* tree2 = build_tree(test_features2, test_performance2);
+
+    std::cout << "\nPredictions for second test set:\n";
+    for (size_t i = 0; i < test_features2.size(); ++i) {
+        double p = predict(tree2, test_features2[i]);
+        std::cout << "Sample " << i+1
+                  << " -> predicted = " << p
+                  << " | actual = " << test_performance2[i] << "\n";
+    }
 
 
     return 0;

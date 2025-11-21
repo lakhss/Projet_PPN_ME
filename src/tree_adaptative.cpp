@@ -55,7 +55,7 @@ int main() {
 
 
     // Build decision tree
-    Node* tree = build_tree(X, y);
+    Node* tree = build_tree(X, y, 0, 10, 3);
 
     // Make predictions for each row
     std::cout << "\n--- PREDICTIONS ---\n";

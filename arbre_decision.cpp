@@ -1,14 +1,15 @@
 #include <iostream>
 #include <vector>
 #include <numeric>
+#include <cmath>   // pour std::abs
 using namespace std;
 
 //  STRUCTURE D’UN NŒUD
 struct Node {
     bool is_leaf;
-    double value;        // valeur prédite si feuille
-    int feature;         // colonne utilisée pour le split
-    double threshold;    // seuil du split
+    double value;       
+    int feature;         
+    double threshold;    
 
     Node* left;
     Node* right;
@@ -32,13 +33,11 @@ double variance(const vector<double>& y){
     return s / y.size();
 }
 
-
 //  CONSTRUCTION DE L’ARBRE
 Node* build_tree(const vector<vector<double>>& X,
                  const vector<double>& y,
                  int depth)
 {
-    // règle d'arrêt : peu d'échantillons ou profondeur élevée
     if (y.size() <= 2 || depth >= 3) {
         Node* leaf = new Node();
         leaf->is_leaf = true;
@@ -53,15 +52,12 @@ Node* build_tree(const vector<vector<double>>& X,
     double best_threshold = 0;
     double best_score = 1e18;
 
-    // On cherche un bon split simple
     for(int f=0; f<m; f++){
-        // seuil simple = moyenne du feature
         double thr = 0;
         for(int i=0; i<n; i++) thr += X[i][f];
         thr /= n;
 
         vector<double> left_y, right_y;
-
         for(int i=0; i<n; i++){
             if (X[i][f] <= thr) left_y.push_back(y[i]);
             else right_y.push_back(y[i]);
@@ -78,7 +74,6 @@ Node* build_tree(const vector<vector<double>>& X,
         }
     }
 
-    // aucun split trouvé : feuille
     if (best_feature == -1) {
         Node* leaf = new Node();
         leaf->is_leaf = true;
@@ -86,7 +81,6 @@ Node* build_tree(const vector<vector<double>>& X,
         return leaf;
     }
 
-    // Séparation des données
     vector<vector<double>> X_left, X_right;
     vector<double> y_left, y_right;
 
@@ -100,11 +94,9 @@ Node* build_tree(const vector<vector<double>>& X,
         }
     }
 
-    // Création du nœud
     Node* node = new Node();
     node->feature = best_feature;
     node->threshold = best_threshold;
-
     node->left = build_tree(X_left, y_left, depth+1);
     node->right = build_tree(X_right, y_right, depth+1);
 
@@ -114,23 +106,10 @@ Node* build_tree(const vector<vector<double>>& X,
 //  PRÉDICTION
 double predict(Node* node, const vector<double>& sample){
     if (node->is_leaf) return node->value;
-
     if (sample[node->feature] <= node->threshold)
         return predict(node->left, sample);
     else
         return predict(node->right, sample);
-}
-
-// Fonctions d'affichage très simples
-void print_vec(const vector<double>& v) {
-    for(double x : v) cout << x << " ";
-    cout << endl;
-}
-
-void print_vec_vec(const vector<vector<double>>& M) {
-    for(const auto& row : M) {
-        print_vec(row);
-    }
 }
 
 int main() {
@@ -153,23 +132,25 @@ int main() {
         0.027608,0.0305594,0.0263897,0.0271464,0.0403354
     };
 
-    cout << "Features" << endl;
-    print_vec_vec(test_features);
-
-    cout << "\nPerformance " << endl;
-    print_vec(test_performance);
-
-   
     Node* arbre = build_tree(test_features, test_performance, 0);
-    vector<double> nouveau_sample = test_features[0];
-    double valeur_predite = predict(arbre, nouveau_sample);
 
-    cout << "\n Prédiction" << endl;
-   for(int i=0; i<10; i++){
-    double pred = predict(arbre, test_features [i]);
-    cout << "Sample " << i+1 << " -> Valeur prédite = " << pred << endl;
+    cout << "Prédictions vs valeurs réelles\n";
+    double total_error = 0;
+    int N = min(size_t(10), test_features.size());
+    for(int i=0; i<N; i++){
+        double pred = predict(arbre, test_features[i]);
+        double real = test_performance[i];
+        total_error += abs(pred - real);
+
+        cout << "Sample " << i+1
+             << " -> Prédit = " << pred
+             << " | Réel = " << real
+             << " | Erreur = " << abs(pred - real)
+             << endl;
     }
+
+    cout << "\nErreur moyenne sur ces " << N << " samples = "
+         << total_error / N << endl;
+
     return 0;
 }
-//g++ arbre_decision.cpp -o arbre
-//./arbre
