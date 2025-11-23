@@ -4,11 +4,12 @@
 #include <vector>
 #include <cmath>
 #include <random>
-#include "decision_tree.hpp"
 
-/**
- * @brief Load CSV file
- */
+#include "decision_tree_rf.hpp"
+
+// ------------------------------
+// Load CSV
+// ------------------------------
 void load_csv(const std::string& filename,
               std::vector<std::vector<double>>& X,
               std::vector<double>& y)
@@ -35,60 +36,80 @@ void load_csv(const std::string& filename,
     }
 }
 
-/**
- * @brief Bagging predictor
- */
-double bagging_predict(const std::vector<Node*>& trees,
+// ------------------------------
+// Bagging prediction (RF trees)
+// ------------------------------
+double bagging_predict(const std::vector<NodeRF*>& trees,
                        const std::vector<double>& sample)
 {
     double sum = 0.0;
-    for (auto tree : trees) {
-        double log_pred = predict(tree, sample);
-        sum += std::exp(log_pred) - 1e-6; // back to original scale
+    for (auto t : trees) {
+        double pred = predict_rf(t, sample);
+        sum += std::exp(pred) - 1e-6;   // back-transform log
     }
     return sum / trees.size();
 }
 
+
 int main() {
+
     std::vector<std::vector<double>> X;
     std::vector<double> y;
     load_csv("../datasets/15k_hvs.csv", X, y);
 
-    std::cout << "Dataset loaded: " << X.size() 
+    std::cout << "Dataset loaded: " << X.size()
               << " samples, " << X[0].size() << " features.\n";
 
-    // Log-transform target
+    // log-transform target
     std::vector<double> log_y = y;
-    for (double &v : log_y)
-        v = std::log(v + 1e-6);
+    for (double &v : log_y) v = std::log(v + 1e-6);
 
-    // --- Bagging setup ---
-    const int N_TREES = 10; // number of trees
-    const int MAX_DEPTH = 25;
+    // Random Forest parameters
+    const int N_TREES = 6;
+    const int MAX_DEPTH = 12;
     const int MIN_SAMPLES = 3;
-    std::vector<Node*> trees;
+    const int MAX_FEATURES = 4;   // random subset of features per split
 
+    std::vector<NodeRF*> trees;
+    trees.reserve(N_TREES);
+
+    // Random generator
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, X.size() - 1);
 
-    for (int t = 0; t < N_TREES; ++t) {
-        // Sample dataset with replacement
-        std::vector<std::vector<double>> X_sample;
-        std::vector<double> y_sample;
-        for (size_t i = 0; i < X.size(); ++i) {
+    // ------------------------------
+    // Build each tree (Bootstrap + Random features)
+    // ------------------------------
+    for (int t = 0; t < N_TREES; t++) {
+
+        std::vector<std::vector<double>> Xb;
+        std::vector<double> yb;
+
+        // bootstrap sampling
+        for (size_t i = 0; i < X.size(); i++) {
             int idx = dis(gen);
-            X_sample.push_back(X[idx]);
-            y_sample.push_back(log_y[idx]);
+            Xb.push_back(X[idx]);
+            yb.push_back(log_y[idx]);
         }
 
-        // Build tree
-        Node* tree = build_tree(X_sample, y_sample, 0, MAX_DEPTH, MIN_SAMPLES);
+        NodeRF* tree = build_tree_rf(
+            Xb, yb,
+            0,
+            MAX_DEPTH,
+            MIN_SAMPLES,
+            MAX_FEATURES,
+            gen
+        );
+
         trees.push_back(tree);
     }
 
-    // --- Make predictions ---
-    std::cout << "\n--- Bagging predictions ---\n";
+    // ------------------------------
+    // Predictions
+    // ------------------------------
+    std::cout << "\n--- Random Forest predictions ---\n";
+
     for (size_t i = 0; i < X.size(); i++) {
         double pred = bagging_predict(trees, X[i]);
         std::cout << "Line " << i+1
