@@ -112,6 +112,19 @@ double predict(Node* node, const vector<double>& sample){
         return predict(node->right, sample);
 }
 
+void boostrap_sample(const vector<vector<double>>& X,
+                    const vector<double>& y,
+                    vector<vector<double>>& X_sample,
+                    vector<double>& y_sample)
+{
+    int n = X.size();
+    for(int i=0; i<n; i++){
+        int idx = rand() % n;
+        X_sample.push_back(X[idx]);
+        y_sample.push_back(y[idx]);
+    }
+}
+
 int main() {
 
     vector<vector<double>> test_features = {
