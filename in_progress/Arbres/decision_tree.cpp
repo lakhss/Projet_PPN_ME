@@ -3,6 +3,8 @@
 #include <cmath>
 #include <algorithm>
 
+// Laeticia's version
+
 
 /**
  * @brief Computes the arithmetic mean of a vector.
@@ -56,8 +58,8 @@ struct Node {
     Node* right = nullptr;
 };
 
-#define MAX_DEPTH 10
-#define MIN_SAMPLES 3
+//#define MAX_DEPTH 10
+//#define MIN_SAMPLES 3
 #define MSE_MAX 1e12
 
 /**
@@ -70,7 +72,9 @@ struct Node {
  */
 Node* build_tree(const std::vector<std::vector<double>>& X,
                  const std::vector<double>& y,
-                 int depth = 0)
+                 int depth = 0,
+                 int MAX_DEPTH = 10,
+                 int MIN_SAMPLES = 3)
 {
     Node* node = new Node();
     node->samples = y.size();
@@ -183,7 +187,7 @@ double predict(Node* node, const std::vector<double>& sample) {
 /**
  * @brief Main program: builds a decision tree with test data.
  */
-int main() {
+/*int main() {
 
 
      // TEST 10 samples 
@@ -253,4 +257,4 @@ int main() {
 
     return 0;
 }
-
+*/

@@ -1,11 +1,9 @@
-Main: \
+main: \
   /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crt1.o \
   /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crti.o \
   /usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o \
-  CMakeFiles/Main.dir/src/data_reader.cpp.o \
-  CMakeFiles/Main.dir/src/decision_tree.cpp.o \
-  CMakeFiles/Main.dir/src/main.cpp.o \
-  CMakeFiles/Main.dir/src/node.cpp.o \
+  CMakeFiles/main.dir/src/main.cpp.o \
+  CMakeFiles/main.dir/src/DecisionTreeRegressor.cpp.o \
   /usr/lib/gcc/x86_64-redhat-linux/15/libstdc++.so \
   /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/libm.so \
   /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/libm.so \
@@ -40,13 +38,9 @@ Main: \
 
 /usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o:
 
-CMakeFiles/Main.dir/src/data_reader.cpp.o:
+CMakeFiles/main.dir/src/main.cpp.o:
 
-CMakeFiles/Main.dir/src/decision_tree.cpp.o:
-
-CMakeFiles/Main.dir/src/main.cpp.o:
-
-CMakeFiles/Main.dir/src/node.cpp.o:
+CMakeFiles/main.dir/src/DecisionTreeRegressor.cpp.o:
 
 /usr/lib/gcc/x86_64-redhat-linux/15/libstdc++.so:
 

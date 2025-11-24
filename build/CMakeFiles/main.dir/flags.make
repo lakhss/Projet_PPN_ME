@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/sabrina/Documents/M1/Projet_PPN_ME/src
+CXX_INCLUDES = 
 
 CXX_FLAGS = -std=gnu++17
 

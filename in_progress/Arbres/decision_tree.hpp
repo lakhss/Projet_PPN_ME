@@ -2,6 +2,8 @@
 #define DECISION_TREE_HPP
 
 #include <vector>
+#include "Node.hpp"
+
 
 struct Node {
     bool is_leaf = false;

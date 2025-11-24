@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include "decision_tree.hpp"
+#include "DataLoader.hpp"
 
 /**
  * @brief Load CSV file into features X and target y

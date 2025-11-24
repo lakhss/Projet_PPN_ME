@@ -1,2 +1,0 @@
-CSV read: 15000 rows, 10 features.
-Second CSV read: 15000 rows, 10 features.
