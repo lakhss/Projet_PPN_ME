@@ -5,7 +5,7 @@
 #include <cmath>
 #include <random>
 
-#include "decision_tree_rf.hpp"
+#include "../random_forests/decision_tree_rf.hpp"
 
 // ------------------------------
 // Load CSV
@@ -55,7 +55,7 @@ int main() {
 
     std::vector<std::vector<double>> X;
     std::vector<double> y;
-    load_csv("../datasets/15k_hvs.csv", X, y);
+    load_csv("../datasets/data_test.csv", X, y);
 
     std::cout << "Dataset loaded: " << X.size()
               << " samples, " << X[0].size() << " features.\n";

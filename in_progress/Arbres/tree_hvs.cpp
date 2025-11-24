@@ -4,47 +4,13 @@
 #include <vector>
 #include <cmath>
 #include "decision_tree.hpp"
-#include "DataLoader.hpp"
-
-/**
- * @brief Load CSV file into features X and target y
- * @param filename Path to CSV file
- * @param X Output: feature matrix
- * @param y Output: target vector
- */
-void load_csv(const std::string& filename,
-              std::vector<std::vector<double>>& X,
-              std::vector<double>& y)
-{
-    std::ifstream file(filename);
-    std::string line;
-
-    // Skip header
-    std::getline(file, line);
-
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::vector<double> row;
-        double value;
-
-        while (ss >> value) {
-            row.push_back(value);
-            if (ss.peek() == ',') ss.ignore();
-        }
-
-        if (row.empty()) continue;
-
-        y.push_back(row.back());  // Last column is target
-        row.pop_back();            // Remove target from features
-        X.push_back(row);          // Store feature row
-    }
-}
+#include "../../src/DataLoader.hpp"
 
 int main() {
     std::vector<std::vector<double>> X;
     std::vector<double> y;
 
-    load_csv("../datasets/15k_hvs.csv", X, y);
+    DataLoader::load_csv("../../datasets/15k_hvs.csv", X, y);
 
     std::cout << "Dataset loaded: " << X.size() 
               << " samples, " << X[0].size() 

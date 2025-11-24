@@ -3,44 +3,7 @@
 #include <sstream>
 #include <vector>
 #include "decision_tree.hpp"
-
-
-/**
- * @brief Loads a CSV file into feature matrix X and target vector y.
- * 
- * The last column of each row is considered as the target value.
- * 
- * @param filename Path to the CSV file.
- * @param X Output feature matrix (each row is a sample, columns are features).
- * @param y Output target vector (last column of each row in the CSV).
- */
-void load_csv(const std::string& filename,
-              std::vector<std::vector<double>>& X,
-              std::vector<double>& y)
-{
-    std::ifstream file(filename);
-    std::string line;
-    std::getline(file, line);
-    
-
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::vector<double> row;
-        double value;
-
-        // Read all values in the line, separated by commas
-        while (ss >> value) {
-            row.push_back(value);
-            if (ss.peek() == ',') ss.ignore();
-        }
-
-        if (row.empty()) continue;
-
-        y.push_back(row.back());  // last value is the target
-        row.pop_back();            // remove target from feature row
-        X.push_back(row);
-    }
-}
+#include "../../src/DataLoader.hpp"
 
 /**
  * @brief Main program to load CSV, build decision tree, and make predictions.
@@ -53,11 +16,11 @@ int main() {
 
 
     // Load CSV dataset
-    load_csv("../datasets/15k_ga_adaptive.csv", X, y);
+    DataLoader::load_csv("../../datasets/15k_ga_adaptative.csv", X, y);
 
 
     // Build decision tree
-    Node* tree = build_tree(X, y, 0, 10, 3);
+    Node* tree = build_tree(X, y, 0, 10,3);
 
     // Make predictions for each row
     std::cout << "\n--- PREDICTIONS ---\n";

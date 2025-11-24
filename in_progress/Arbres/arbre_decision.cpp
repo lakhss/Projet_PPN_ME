@@ -2,21 +2,8 @@
 #include <vector>
 #include <numeric>
 #include <cmath>   // pour std::abs
+#include "../../src/Node.hpp"
 using namespace std;
-
-//  STRUCTURE D’UN NŒUD
-struct Node {
-    bool is_leaf;
-    double value;       
-    int feature;         
-    double threshold;    
-
-    Node* left;
-    Node* right;
-
-    Node() : is_leaf(false), value(0), feature(-1), threshold(0),
-             left(nullptr), right(nullptr) {}
-};
 
 
 double mean(const vector<double>& y){

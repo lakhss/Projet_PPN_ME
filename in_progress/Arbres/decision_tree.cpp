@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include "../../src/Node.hpp"
 
 // Laeticia's version
 
@@ -47,16 +48,6 @@ double mse(const std::vector<double>& values) {
  * value: predicted value if leaf.
  * left/right: child nodes.
  */
-struct Node {
-    bool is_leaf = false;
-    int samples = 0;
-    int feature_index = -1;
-    double threshold = 0.0;
-    double value = 0.0;
-
-    Node* left = nullptr;
-    Node* right = nullptr;
-};
 
 //#define MAX_DEPTH 10
 //#define MIN_SAMPLES 3
@@ -144,7 +135,7 @@ Node* build_tree(const std::vector<std::vector<double>>& X,
         return node;
     }
 
-    node->feature_index = best_feature;
+    node->feature_idx = best_feature;
     node->threshold = best_threshold;
 
     std::vector<std::vector<double>> X_left, X_right;
@@ -178,7 +169,7 @@ double predict(Node* node, const std::vector<double>& sample) {
     if (node->is_leaf) 
         return node->value;
 
-    if (sample[node->feature_index] <= node->threshold)
+    if (sample[node->feature_idx] <= node->threshold)
         return predict(node->left, sample);
     else
         return predict(node->right, sample);

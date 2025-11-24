@@ -2,19 +2,7 @@
 #define DECISION_TREE_HPP
 
 #include <vector>
-#include "Node.hpp"
-
-
-struct Node {
-    bool is_leaf = false;
-    int samples = 0;
-    int feature_index = -1;
-    double threshold = 0.0;
-    double value = 0.0;
-
-    Node* left = nullptr;
-    Node* right = nullptr;
-};
+#include "../../src/Node.hpp"
 
 double mean(const std::vector<double>& values);
 double mse(const std::vector<double>& values);
