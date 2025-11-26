@@ -10,7 +10,7 @@ int main() {
     std::vector<std::vector<double>> X, X_train, X_test;
     std::vector<double> y, y_train, y_test;
 
-    DataLoader::load_csv("../datasets/15k_ga_adaptive.csv", X, y);  // usage : after build and compil run ./test_loader, may want to replace path for each test 
+    DataLoader::load_csv("../datasets/15k_ga_adaptive.csv", X, y);  // usage : after build and compil (mkdir and cd build then cmake .. and make) run ./test_loader, may want to replace path for each test 
 
     if (X.empty()) {
         std::cerr << "Aucune donnée chargée." << std::endl;
