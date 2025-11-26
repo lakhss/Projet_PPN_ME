@@ -1,70 +1,75 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#include "DataLoader.hpp"
+#include "DecisionTreeRegressor.hpp"
 #include <vector>
-#include "decision_tree.hpp"
+#include <iostream>
+#include <algorithm>
+#include <chrono>
+#include <random>  
 
-
-/**
- * @brief Loads a CSV file into feature matrix X and target vector y.
- * 
- * The last column of each row is considered as the target value.
- * 
- * @param filename Path to the CSV file.
- * @param X Output feature matrix (each row is a sample, columns are features).
- * @param y Output target vector (last column of each row in the CSV).
- */
-void load_csv(const std::string& filename,
-              std::vector<std::vector<double>>& X,
-              std::vector<double>& y)
-{
-    std::ifstream file(filename);
-    std::string line;
-
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::vector<double> row;
-        double value;
-
-        // Read all values in the line, separated by commas
-        while (ss >> value) {
-            row.push_back(value);
-            if (ss.peek() == ',') ss.ignore();
-        }
-
-        if (row.empty()) continue;
-
-        y.push_back(row.back());  // last value is the target
-        row.pop_back();            // remove target from feature row
-        X.push_back(row);
-    }
-}
-
-/**
- * @brief Main program to load CSV, build decision tree, and make predictions.
- * 
- * @return int Exit status.
- */
 int main() {
-    std::vector<std::vector<double>> X; ///< feature matrix
-    std::vector<double> y;              ///< target vector
+    std::vector<std::vector<double>> X, X_train, X_test;
+    std::vector<double> y, y_train, y_test;
 
+    DataLoader::load_csv("../datasets/15k_ga_adaptive.csv", X, y);  // usage : after build and compil (mkdir and cd build then cmake .. and make) run ./test_loader, may want to replace path for each test 
 
-    // Load CSV dataset
-    load_csv("../datasets/15k_ga_adaptive.csv", X, y);
-
-
-    // Build decision tree
-    Node* tree = build_tree(X, y);
-
-    // Make predictions for each row
-    std::cout << "\n--- PREDICTIONS ---\n";
-    for (size_t i = 0; i < X.size(); i++) {
-        double p = predict(tree, X[i]);
-        std::cout << "Row " << i+1
-                  << " -> prediction = " << p
-                  << " | actual = " << y[i] << "\n";
+    if (X.empty()) {
+        std::cerr << "Aucune donnée chargée." << std::endl;
+        return 1;
     }
+
+
+    double min_y = *std::min_element(y.begin(), y.end());
+    double max_y = *std::max_element(y.begin(), y.end());
+    int count_30 = std::count(y.begin(), y.end(), 30.0);
+    std::cout << "Performance : min = " << min_y << " | max = " << max_y << " | valeurs exactement 30 = " << count_30 << std::endl;
+
+    // Split
+    std::vector<size_t> idx(X.size());
+    std::iota(idx.begin(), idx.end(), 0);
+    std::random_device rd; std::mt19937 g(rd());
+    std::shuffle(idx.begin(), idx.end(), g);
+    size_t split = static_cast<size_t>(X.size() * 0.8);
+    if (split == X.size()) split--;  // Assure test non vide
+
+    for (size_t i = 0; i < split; ++i) {
+        X_train.push_back(X[idx[i]]);
+        y_train.push_back(y[idx[i]]);
+    }
+    for (size_t i = split; i < X.size(); ++i) {
+        X_test.push_back(X[idx[i]]);
+        y_test.push_back(y[idx[i]]);
+    }
+
+    std::cout << "Train size: " << X_train.size() << " | Test size: " << X_test.size() << std::endl;
+
+    // Entraînement
+    DecisionTreeRegressor tree;
+    tree.max_depth = 10;
+    tree.min_samples_split = 10;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    tree.fit(X_train, y_train);
+    //tree.print_tree(tree.root); // uncomment to print the tree structure
+    tree.export_to_dot("tree.dot");
+
+    auto end = std::chrono::high_resolution_clock::now();
+    double time = std::chrono::duration<double>(end - start).count();
+
+    std::cout << "Arbre entraîné (profondeur max = " << tree.max_depth << ")" << std::endl;
+
+    double mse = 0.0;
+    if (X_test.empty()) {
+        std::cout << "Test set vide, MSE non calculable." << std::endl;
+    } else {
+        for (size_t i = 0; i < X_test.size(); ++i) {
+            double pred = tree.predict(X_test[i]);
+            mse += (pred - y_test[i]) * (pred - y_test[i]);
+        }
+        mse /= X_test.size();
+    }
+
+    std::cout << "MSE sur test : " << mse << std::endl;
+    std::cout << "Temps entraînement : " << time << " s" << std::endl;
 
     return 0;
 }
