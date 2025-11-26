@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(ArbreDecisionRegression)
+project(ProjetPPNME)
 set(CMAKE_CXX_STANDARD 17)
-add_executable(main src/main.cpp src/DecisionTreeRegressor.cpp)
+include_directories(src)  
+add_executable(test_loader src/main.cpp src/DecisionTreeRegressor.cpp src/BaggingRegressor.cpp)
