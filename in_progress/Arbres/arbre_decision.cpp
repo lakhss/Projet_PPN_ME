@@ -5,22 +5,6 @@
 #include "../../src/Node.hpp"
 using namespace std;
 
-<<<<<<< HEAD:arbre_decision.cpp
-//  STRUCTURE D’UN NŒUD
-struct Node {
-    bool is_leaf;
-    double value;       
-    int feature;         
-    double threshold;    
-
-    Node* left;
-    Node* right;
-
-    Node() : is_leaf(false), value(0), feature(-1), threshold(0),
-             left(nullptr), right(nullptr) {}
-};
-=======
->>>>>>> 9863640121e553764f22cba3eb5c98d1d497510f:in_progress/Arbres/arbre_decision.cpp
 
 double mean(const vector<double>& y){
     double s = 0;
