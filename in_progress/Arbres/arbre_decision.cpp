@@ -98,7 +98,7 @@ double predict(Node* node, const vector<double>& sample){
     else
         return predict(node->right, sample);
 }
-
+// BOOTSTRAP SAMPLING (bagging)
 void boostrap_sample(const vector<vector<double>>& X,
                     const vector<double>& y,
                     vector<vector<double>>& X_sample,
