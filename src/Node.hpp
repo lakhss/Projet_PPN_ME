@@ -1,3 +1,8 @@
+#pragma once
+
+#ifndef NODE_HPP
+#define NODE_HPP
+
 struct Node {
     bool is_leaf = true;  // is the node a leaf or not
     double value = 0.0;      // the mean of the performances in the node
@@ -9,3 +14,5 @@ struct Node {
 
     ~Node() { delete left; delete right; }
 };
+
+#endif 
