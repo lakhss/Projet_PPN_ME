@@ -62,7 +62,13 @@ Node* DecisionTreeRegressor::build(const std::vector<size_t>& indices,
                                    int depth) {
     Node* node = new Node();
 
-    double mean = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
+    // double mean = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
+    double mean = 0 
+    for (int i :indices) {
+        mean += y[i];
+    }
+    mean /= indices.size();
+
     node->value = mean;
 
     if (depth >= max_depth || indices.size() < min_samples_split) {
