@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/test_loader.dir/link.d CMakeFiles/test_loader.dir/src/main.cpp.o CMakeFiles/test_loader.dir/src/DecisionTreeRegressor.cpp.o -o test_loader

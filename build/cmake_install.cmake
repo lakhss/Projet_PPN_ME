@@ -1,4 +1,4 @@
-# Install script for directory: /home/sabrina/Documents/M1/Projet_PPN_ME
+# Install script for directory: /home/leticia_zamoum/Documents/projet_PPN/Projet_PPN_ME
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,7 +45,7 @@ endif()
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/sabrina/Documents/M1/Projet_PPN_ME/build/install_local_manifest.txt"
+  file(WRITE "/home/leticia_zamoum/Documents/projet_PPN/Projet_PPN_ME/build/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -61,6 +61,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/sabrina/Documents/M1/Projet_PPN_ME/build/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/home/leticia_zamoum/Documents/projet_PPN/Projet_PPN_ME/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

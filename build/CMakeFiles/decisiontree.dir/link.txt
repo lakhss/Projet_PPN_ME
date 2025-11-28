@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdecisiontree.a CMakeFiles/decisiontree.dir/src/DecisionTreeRegressor.cpp.o
+/usr/bin/ranlib libdecisiontree.a

@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/sabrina/Documents/M1/Projet_PPN_ME
+CMAKE_SOURCE_DIR = /home/leticia_zamoum/Documents/projet_PPN/Projet_PPN_ME
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/sabrina/Documents/M1/Projet_PPN_ME/build
+CMAKE_BINARY_DIR = /home/leticia_zamoum/Documents/projet_PPN/Projet_PPN_ME/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sabrina/Documents/M1/Projet_PPN_ME/build/CMakeFiles /home/sabrina/Documents/M1/Projet_PPN_ME/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/leticia_zamoum/Documents/projet_PPN/Projet_PPN_ME/build/CMakeFiles /home/leticia_zamoum/Documents/projet_PPN/Projet_PPN_ME/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/sabrina/Documents/M1/Projet_PPN_ME/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/leticia_zamoum/Documents/projet_PPN/Projet_PPN_ME/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -117,24 +117,37 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named test_loader
+# Target rules for targets named decisiontree
 
 # Build rule for target.
-test_loader: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_loader
-.PHONY : test_loader
+decisiontree: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 decisiontree
+.PHONY : decisiontree
 
 # fast build rule for target.
-test_loader/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_loader.dir/build.make CMakeFiles/test_loader.dir/build
-.PHONY : test_loader/fast
+decisiontree/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/decisiontree.dir/build.make CMakeFiles/decisiontree.dir/build
+.PHONY : decisiontree/fast
+
+#=============================================================================
+# Target rules for targets named tree_regressor
+
+# Build rule for target.
+tree_regressor: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tree_regressor
+.PHONY : tree_regressor
+
+# fast build rule for target.
+tree_regressor/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/tree_regressor.dir/build.make CMakeFiles/tree_regressor.dir/build
+.PHONY : tree_regressor/fast
 
 src/DecisionTreeRegressor.o: src/DecisionTreeRegressor.cpp.o
 .PHONY : src/DecisionTreeRegressor.o
 
 # target to build an object file
 src/DecisionTreeRegressor.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_loader.dir/build.make CMakeFiles/test_loader.dir/src/DecisionTreeRegressor.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/decisiontree.dir/build.make CMakeFiles/decisiontree.dir/src/DecisionTreeRegressor.cpp.o
 .PHONY : src/DecisionTreeRegressor.cpp.o
 
 src/DecisionTreeRegressor.i: src/DecisionTreeRegressor.cpp.i
@@ -142,7 +155,7 @@ src/DecisionTreeRegressor.i: src/DecisionTreeRegressor.cpp.i
 
 # target to preprocess a source file
 src/DecisionTreeRegressor.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_loader.dir/build.make CMakeFiles/test_loader.dir/src/DecisionTreeRegressor.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/decisiontree.dir/build.make CMakeFiles/decisiontree.dir/src/DecisionTreeRegressor.cpp.i
 .PHONY : src/DecisionTreeRegressor.cpp.i
 
 src/DecisionTreeRegressor.s: src/DecisionTreeRegressor.cpp.s
@@ -150,7 +163,7 @@ src/DecisionTreeRegressor.s: src/DecisionTreeRegressor.cpp.s
 
 # target to generate assembly for a file
 src/DecisionTreeRegressor.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_loader.dir/build.make CMakeFiles/test_loader.dir/src/DecisionTreeRegressor.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/decisiontree.dir/build.make CMakeFiles/decisiontree.dir/src/DecisionTreeRegressor.cpp.s
 .PHONY : src/DecisionTreeRegressor.cpp.s
 
 src/main.o: src/main.cpp.o
@@ -158,7 +171,7 @@ src/main.o: src/main.cpp.o
 
 # target to build an object file
 src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_loader.dir/build.make CMakeFiles/test_loader.dir/src/main.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/tree_regressor.dir/build.make CMakeFiles/tree_regressor.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -166,7 +179,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_loader.dir/build.make CMakeFiles/test_loader.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/tree_regressor.dir/build.make CMakeFiles/tree_regressor.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -174,7 +187,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_loader.dir/build.make CMakeFiles/test_loader.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/tree_regressor.dir/build.make CMakeFiles/tree_regressor.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 # Help Target
@@ -185,7 +198,8 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... test_loader"
+	@echo "... decisiontree"
+	@echo "... tree_regressor"
 	@echo "... src/DecisionTreeRegressor.o"
 	@echo "... src/DecisionTreeRegressor.i"
 	@echo "... src/DecisionTreeRegressor.s"

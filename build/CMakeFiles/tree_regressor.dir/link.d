@@ -1,9 +1,9 @@
-test_loader: \
+tree_regressor: \
   /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crt1.o \
   /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/crti.o \
   /usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o \
-  CMakeFiles/test_loader.dir/src/main.cpp.o \
-  CMakeFiles/test_loader.dir/src/DecisionTreeRegressor.cpp.o \
+  CMakeFiles/tree_regressor.dir/src/main.cpp.o \
+  libdecisiontree.a \
   /usr/lib/gcc/x86_64-redhat-linux/15/libstdc++.so \
   /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/libm.so \
   /usr/lib/gcc/x86_64-redhat-linux/15/../../../../lib64/libm.so \
@@ -38,9 +38,9 @@ test_loader: \
 
 /usr/lib/gcc/x86_64-redhat-linux/15/crtbegin.o:
 
-CMakeFiles/test_loader.dir/src/main.cpp.o:
+CMakeFiles/tree_regressor.dir/src/main.cpp.o:
 
-CMakeFiles/test_loader.dir/src/DecisionTreeRegressor.cpp.o:
+libdecisiontree.a:
 
 /usr/lib/gcc/x86_64-redhat-linux/15/libstdc++.so:
 
