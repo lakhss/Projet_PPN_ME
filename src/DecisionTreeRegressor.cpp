@@ -63,7 +63,7 @@ Node* DecisionTreeRegressor::build(const std::vector<size_t>& indices,
     Node* node = new Node();
 
     // double mean = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
-    double mean = 0 
+    double mean = 0;
     for (int i :indices) {
         mean += y[i];
     }
