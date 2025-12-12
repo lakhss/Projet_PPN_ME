@@ -6,17 +6,50 @@
 #include <chrono>
 #include <random>  
 
-int main() {
+
+int main(int argc, char** argv) {
+
+    std::string dataset_path;
+
+    int choice = 5; 
+    if (argc >= 2) {
+        choice = std::stoi(argv[1]);
+    }
+
+    switch (choice) {
+        case 1:
+            dataset_path = "../datasets/15k_ga_adaptive.csv";
+            break;
+        case 2:
+            dataset_path = "../datasets/15k_hvs.csv";
+            break;
+        case 3:
+            dataset_path = "../datasets/15k_random.csv";
+            break;
+        case 4:
+            dataset_path = "../datasets/30k_ga_adaptive.csv";
+            break;
+        case 5:
+            dataset_path = "../datasets/data_test.csv";
+            break;    
+        default:
+            std::cerr << "Choix invalide.\n";
+            std::cerr << "Usage : ./test_loader [1|2|3]\n";
+            return 1;
+    }
+
+    std::cout << "Dataset sélectionné : " << dataset_path << std::endl;
+
+
     std::vector<std::vector<double>> X, X_train, X_test;
     std::vector<double> y, y_train, y_test;
 
-    DataLoader::load_csv("../datasets/15k_ga_adaptive.csv", X, y);  // usage : after build and compil (mkdir and cd build then cmake .. and make) run ./test_loader, may want to replace path for each test 
+    DataLoader::load_csv(dataset_path, X, y);
 
     if (X.empty()) {
         std::cerr << "Aucune donnée chargée." << std::endl;
         return 1;
     }
-
 
     double min_y = *std::min_element(y.begin(), y.end());
     double max_y = *std::max_element(y.begin(), y.end());
