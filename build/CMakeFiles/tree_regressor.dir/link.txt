@@ -1,1 +1,0 @@
-/usr/bin/c++  -O2 -Wall -Wextra -Wl,--dependency-file=CMakeFiles/tree_regressor.dir/link.d CMakeFiles/tree_regressor.dir/src/main.cpp.o -o tree_regressor  libdecisiontree.a
