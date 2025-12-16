@@ -11,13 +11,13 @@ double DecisionTreeRegressor::mse(const std::vector<double>& y) {
     for (double v : y) sum += (v - mean) * (v - mean);
     return sum / y.size();
 }
-
+ 
 
 // opti du find best split
 std::tuple<int, double, double> DecisionTreeRegressor::find_best_split(
     const std::vector<size_t>& indices,
     const std::vector<std::vector<double>>& X,
-    const std::vector<double>& y) {
+    const std::vector<double>& y) { 
 
     int best_feat = -1;
     double best_thr = 0.0;
