@@ -88,7 +88,7 @@ std::unique_ptr<Node> DecisionTreeRegressor::build(const std::vector<size_t>& in
                                    const std::vector<std::vector<double>>& X,
                                    const std::vector<double>& y,
                                    int depth) {
-    auto node = std::make_unique<Node>();
+    auto node = std::make_unique<Node>(); 
 
     // double mean = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
     double mean = 0; 
