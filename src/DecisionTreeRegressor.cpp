@@ -11,63 +11,91 @@ double DecisionTreeRegressor::mse(const std::vector<double>& y) {
     for (double v : y) sum += (v - mean) * (v - mean);
     return sum / y.size();
 }
+ 
 
+// opti du find best split
 std::tuple<int, double, double> DecisionTreeRegressor::find_best_split(
     const std::vector<size_t>& indices,
     const std::vector<std::vector<double>>& X,
-    const std::vector<double>& y) {
+    const std::vector<double>& y) { 
 
     int best_feat = -1;
     double best_thr = 0.0;
-    double best_gain = 0.0;
-    double parent_mse = mse(y);
-    int n = indices.size();
+    double best_gain = -1.0; // Initialisé à -1 pour être sûr
+
+    // on fait un pre calcul pour le noeud parent
+    double global_sum = 0.0;
+    double global_sq_sum = 0.0; 
+    for (size_t i : indices) {
+        global_sum += y[i];
+        global_sq_sum += y[i] * y[i];
+    }
+
+    double parent_mse = (global_sq_sum / indices.size()) - (global_sum / indices.size()) * (global_sum / indices.size());
+
     int n_features = X[0].size();
 
     for (int feat = 0; feat < n_features; ++feat) {
+        // on recupere les paires Value index pour trier
         std::vector<std::pair<double, size_t>> pairs;
+        pairs.reserve(indices.size());
         for (size_t i : indices)
             pairs.emplace_back(X[i][feat], i);
         std::sort(pairs.begin(), pairs.end());
 
-        for (size_t i = 1; i < pairs.size(); ++i) {
-            if (pairs[i].first == pairs[i-1].first) continue;
-            double thr = (pairs[i-1].first + pairs[i].first) / 2.0;
+        // Initialisation des sommes gauche (vide au début) et droite (tout au début)
+        double left_sum = 0.0, left_sq_sum = 0.0;
+        double right_sum = global_sum, right_sq_sum = global_sq_sum;
+        size_t left_count = 0; 
+        size_t right_count = indices.size();  // modification ici vers size_t au lieu de int
 
-            std::vector<double> left_y, right_y;
-            for (const auto& p : pairs) {
-                if (p.first <= thr) left_y.push_back(y[p.second]);
-                else right_y.push_back(y[p.second]);
-            }
+        for (size_t i = 0; i < pairs.size() - 1; ++i) {
+            // On déplace un élément de droite vers gauche
+            double val_y = y[pairs[i].second];
+            
+            left_sum += val_y;
+            left_sq_sum += val_y * val_y;
+            left_count++;
 
-            if (left_y.size() < min_samples_split || right_y.size() < min_samples_split)
-                continue;
+            right_sum -= val_y;
+            right_sq_sum -= val_y * val_y;
+            right_count--;
 
-            double weighted_mse = (left_y.size() * mse(left_y) + right_y.size() * mse(right_y)) / n;
+            // Si valeurs identiques, on ne coupe pas ici (pour gérer les duplicats)
+            if (pairs[i].first == pairs[i+1].first) continue;
+            
+            if (left_count < min_samples_split || right_count < min_samples_split) continue;
+
+            // Calcul MSE en O(1)
+            double mse_left = (left_count == 0) ? 0 : (left_sq_sum / left_count) - (left_sum / left_count) * (left_sum / left_count);
+            double mse_right = (right_count == 0) ? 0 : (right_sq_sum / right_count) - (right_sum / right_count) * (right_sum / right_count);
+
+            double weighted_mse = (left_count * mse_left + right_count * mse_right) / indices.size();
             double gain = parent_mse - weighted_mse;
 
             if (gain > best_gain) {
                 best_gain = gain;
                 best_feat = feat;
-                best_thr = thr;
+                best_thr = (pairs[i].first + pairs[i+1].first) / 2.0;
             }
         }
     }
-    return {best_feat, best_thr, best_gain};  // Ajout de best_gain ici
+    return {best_feat, best_thr, best_gain};
 }
 
-Node* DecisionTreeRegressor::build(const std::vector<size_t>& indices,
+// rectification de la signature pour retourner un unique_ptr<Node>
+std::unique_ptr<Node> DecisionTreeRegressor::build(const std::vector<size_t>& indices,
                                    const std::vector<std::vector<double>>& X,
                                    const std::vector<double>& y,
                                    int depth) {
-    Node* node = new Node();
+    auto node = std::make_unique<Node>(); 
 
     // double mean = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
-    double mean = 0;
-    for (int i :indices) {
+    double mean = 0; 
+    for (size_t i : indices) {
         mean += y[i];
     }
-    mean /= indices.size();
+    if (!indices.empty()) mean /= indices.size();
 
     node->value = mean;
 
@@ -87,6 +115,9 @@ Node* DecisionTreeRegressor::build(const std::vector<size_t>& indices,
     node->threshold = thr;
 
     std::vector<size_t> left_idx, right_idx;
+    left_idx.reserve(indices.size()); 
+    right_idx.reserve(indices.size());
+
     for (size_t i : indices) {
         if (X[i][feat] <= thr) left_idx.push_back(i);
         else right_idx.push_back(i);
@@ -102,31 +133,37 @@ void DecisionTreeRegressor::fit(const std::vector<std::vector<double>>& X,
     std::vector<size_t> indices(X.size());
     std::iota(indices.begin(), indices.end(), 0);
     root = build(indices, X, y, 0);
-    std::cout << "Arbre entraîné (profondeur max = " << max_depth << ")" << std::endl;
+    //std::cout << "Arbre entraîné (profondeur max = " << max_depth << ")" << std::endl;
 }
 
 double DecisionTreeRegressor::predict(const std::vector<double>& x) const {
-    Node* node = root;
-    while (!node->is_leaf) {
+    // .get() because root est un smart pointer
+    Node* node = root.get();
+    while (node && !node->is_leaf) {
         if (x[node->feature_idx] <= node->threshold)
-            node = node->left;
+            node = node->left.get();
         else
-            node = node->right;
+            node = node->right.get();
     }
-    return node->value;
+    return node ? node->value : 0.0;
 }
 
-void DecisionTreeRegressor::print_tree(Node* node, int depth) {
-    if (!node) return;
-    std::string indent(depth * 2, ' ');  // Espace pour l'indentation
+void DecisionTreeRegressor::print_tree(const Node* node, int depth) { // const ajouté
+    if (!node) {
+        if (depth == 0 && root) node = root.get(); 
+        else return;
+    }
+
+    std::string indent(depth * 2, ' ');  
     if (node->is_leaf) {
         std::cout << indent << "Feuille: value = " << node->value << std::endl;
     } else {
         std::cout << indent << "Split: feature " << node->feature_idx 
                   << " <= " << node->threshold << std::endl;
     }
-    print_tree(node->left, depth + 1);
-    print_tree(node->right, depth + 1);
+    // .get() pour la récursivité
+    if (node->left) print_tree(node->left.get(), depth + 1);
+    if (node->right) print_tree(node->right.get(), depth + 1);
 }
 
 
@@ -141,7 +178,7 @@ void DecisionTreeRegressor::export_to_dot(const std::string& filename) const {
     out << "node [shape=box, style=filled, fontsize=10];\n";
 
     int counter = 0;
-    export_node(out, root, counter);
+    export_node(out, root.get(), counter);
 
     out << "}\n";
     out.close();
@@ -149,7 +186,7 @@ void DecisionTreeRegressor::export_to_dot(const std::string& filename) const {
     std::cout << "Arbre exporté dans " << filename << std::endl;
 }
 
-void DecisionTreeRegressor::export_node(std::ofstream& out, Node* node, int& counter) const {
+void DecisionTreeRegressor::export_node(std::ofstream& out, const Node* node, int& counter) const {
     if (!node) return;
 
     int id = counter++;
@@ -165,11 +202,11 @@ void DecisionTreeRegressor::export_node(std::ofstream& out, Node* node, int& cou
 
     if (!node->is_leaf) {
         int left_id = counter;
-        export_node(out, node->left, counter);
+        if (node->left) export_node(out, node->left.get(), counter);
         out << "node" << id << " -> node" << left_id << " [label=\"yes\"];\n";
 
         int right_id = counter;
-        export_node(out, node->right, counter);
+        if (node->right) export_node(out, node->right.get(), counter);
         out << "node" << id << " -> node" << right_id << " [label=\"no\"];\n";
     }
 }

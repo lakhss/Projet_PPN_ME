@@ -17,7 +17,9 @@ public:
 
         std::string line;
         std::getline(file, line); 
-
+        // a verifier si cela est sympa pour eviter l'allocation dynamique 
+        //X.reserve(30001); 
+        //y.reserve(30001);
         int total_lines = 0;
         while (std::getline(file, line)) {
             total_lines++;
