@@ -14,6 +14,7 @@ add_executable(test_loader
     src/BaggingRegressor.hpp
     src/BoostingRegressor.cpp
     src/BoostingRegressor.hpp
+    src/PerformanceEvaluator.hpp
     src/Node.hpp
     src/DataLoader.hpp
     src/Metrics.hpp
