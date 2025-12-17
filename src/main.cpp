@@ -1,108 +1,110 @@
 #include "DataLoader.hpp"
 #include "DecisionTreeRegressor.hpp"
+#include "BaggingRegressor.hpp" 
+#include "BoostingRegressor.hpp"
+#include "PerformanceEvaluator.hpp"
+
 #include <vector>
 #include <iostream>
-#include <algorithm>
-#include <chrono>
-#include <random>  
-
+#include <string>
+#include <fstream>
+#include <map>
 
 int main(int argc, char** argv) {
 
-    std::string dataset_path;
+    std::ofstream outfile("results.csv");
+    if (outfile.is_open()) {
+        outfile << "Dataset,Model,RMSE,MAE,Time\n"; 
+        outfile.close();
+    }
 
     int choice = 5; 
-    if (argc >= 2) {
-        choice = std::stoi(argv[1]);
-    }
+    if (argc >= 2) choice = std::stoi(argv[1]);
 
-    switch (choice) {
-        case 1:
-            dataset_path = "../datasets/15k_ga_adaptive.csv";
-            break;
-        case 2:
-            dataset_path = "../datasets/15k_hvs.csv";
-            break;
-        case 3:
-            dataset_path = "../datasets/15k_random.csv";
-            break;
-        case 4:
-            dataset_path = "../datasets/30k_ga_adaptive.csv";
-            break;
-        case 5:
-            dataset_path = "../datasets/data_test.csv";
-            break;    
-        default:
-            std::cerr << "Choix invalide.\n";
-            std::cerr << "Usage : ./test_loader [1|2|3]\n";
-            return 1;
-    }
+    std::map<std::string, std::string> all_datasets = {
+        {"Adaptive", "../datasets/15k_ga_adaptive.csv"},
+        {"HVS",      "../datasets/15k_hvs.csv"},
+        {"Random",   "../datasets/15k_random.csv"}
+        
+    };
 
-    std::cout << "Dataset sélectionné : " << dataset_path << std::endl;
+   
+    if (choice == 6) {
+        std::cout << "=== MODE BENCHMARK MULTI-DATASETS ===\n" << std::endl;
 
+        for (const auto& [name, path] : all_datasets) {
+            std::cout << "\n################################################" << std::endl;
+            std::cout << " CHARGEMENT : " << name << " (" << path << ")" << std::endl;
+            std::cout << "################################################" << std::endl;
 
-    std::vector<std::vector<double>> X, X_train, X_test;
-    std::vector<double> y, y_train, y_test;
+            std::vector<std::vector<double>> X;
+            std::vector<double> y;
+            DataLoader::load_csv(path, X, y);
 
-    DataLoader::load_csv(dataset_path, X, y);
+            if (X.empty()) {
+                std::cerr << "-> Erreur ou Fichier vide. Je passe au suivant." << std::endl;
+                continue;
+            }
 
-    if (X.empty()) {
-        std::cerr << "Aucune donnée chargée." << std::endl;
-        return 1;
-    }
+            PerformanceEvaluator::print_header();
 
-    double min_y = *std::min_element(y.begin(), y.end());
-    double max_y = *std::max_element(y.begin(), y.end());
-    int count_30 = std::count(y.begin(), y.end(), 30.0);
-    std::cout << "Performance : min = " << min_y << " | max = " << max_y << " | valeurs exactement 30 = " << count_30 << std::endl;
+            // A. Étude Profondeur (Arbre)
+            std::vector<int> depths = {5, 10, 15, 20};
+            for (int d : depths) {
+                PerformanceEvaluator::evaluate(name, "Arbre (Depth=" + std::to_string(d) + ")", [d]() {
+                    DecisionTreeRegressor t; t.max_depth = d; t.min_samples_split = 10; return t;
+                }, X, y);
+            }
 
-    // Split
-    std::vector<size_t> idx(X.size());
-    std::iota(idx.begin(), idx.end(), 0);
-    std::random_device rd; std::mt19937 g(rd());
-    std::shuffle(idx.begin(), idx.end(), g);
-    size_t split = static_cast<size_t>(X.size() * 0.8);
-    if (split == X.size()) split--;  // Assure test non vide
+            // B. Étude Boosting
+            std::vector<int> n_trees = {10, 30, 50};
+            for (int n : n_trees) {
+                PerformanceEvaluator::evaluate(name, "Boosting (N=" + std::to_string(n) + ")", [n]() {
+                    BoostingRegressor b; b.n_estimators = n; b.max_depth = 4; b.learning_rate = 0.2; return b;
+                }, X, y);
+            }
 
-    for (size_t i = 0; i < split; ++i) {
-        X_train.push_back(X[idx[i]]);
-        y_train.push_back(y[idx[i]]);
-    }
-    for (size_t i = split; i < X.size(); ++i) {
-        X_test.push_back(X[idx[i]]);
-        y_test.push_back(y[idx[i]]);
-    }
-
-    std::cout << "Train size: " << X_train.size() << " | Test size: " << X_test.size() << std::endl;
-
-    // Entraînement
-    DecisionTreeRegressor tree;
-    tree.max_depth = 10;
-    tree.min_samples_split = 10;
-
-    auto start = std::chrono::high_resolution_clock::now();
-    tree.fit(X_train, y_train);
-    //tree.print_tree(tree.root); // uncomment to print the tree structure
-    tree.export_to_dot("tree.dot");
-
-    auto end = std::chrono::high_resolution_clock::now();
-    double time = std::chrono::duration<double>(end - start).count();
-
-    std::cout << "Arbre entraîné (profondeur max = " << tree.max_depth << ")" << std::endl;
-
-    double mse = 0.0;
-    if (X_test.empty()) {
-        std::cout << "Test set vide, MSE non calculable." << std::endl;
-    } else {
-        for (size_t i = 0; i < X_test.size(); ++i) {
-            double pred = tree.predict(X_test[i]);
-            mse += (pred - y_test[i]) * (pred - y_test[i]);
+            // C. Étude Bagging
+            for (int n : n_trees) {
+                PerformanceEvaluator::evaluate(name, "Bagging (N=" + std::to_string(n) + ")", [n]() {
+                    BaggingRegressor bg; bg.n_estimators = n; bg.max_depth = 12; return bg;
+                }, X, y);
+            }
         }
-        mse /= X_test.size();
-    }
+        std::cout << "\nTerminé ! Résultats dans build/results.csv" << std::endl;
+    } 
 
-    std::cout << "MSE sur test : " << mse << std::endl;
-    std::cout << "Temps entraînement : " << time << " s" << std::endl;
+    else {
+        std::string path;
+        std::string name = "SingleRun"; 
+        switch (choice) {
+            case 1: path = "../datasets/15k_ga_adaptive.csv"; name="Adaptive"; break;
+            case 2: path = "../datasets/15k_hvs.csv"; name="HVS"; break;
+            case 3: path = "../datasets/15k_random.csv"; name="Random"; break;
+            case 4: path = "../datasets/30k_ga_adaptive.csv"; name="Adaptive30k"; break;
+            case 5: path = "../datasets/data_test.csv"; name="Test"; break;
+            default: std::cerr << "Choix invalide.\n"; return 1;
+        }
+        
+        std::cout << "Dataset : " << path << std::endl;
+        std::vector<std::vector<double>> X;
+        std::vector<double> y;
+        DataLoader::load_csv(path, X, y);
+        
+        PerformanceEvaluator::print_header();
+        
+        PerformanceEvaluator::evaluate(name, "Arbre (D=12)", [](){ 
+            DecisionTreeRegressor t; t.max_depth=12; t.min_samples_split=10; return t; 
+        }, X, y);
+        
+        PerformanceEvaluator::evaluate(name, "Bagging (N=20)", [](){ 
+            BaggingRegressor b; b.n_estimators=20; b.max_depth=12; return b; 
+        }, X, y);
+
+        PerformanceEvaluator::evaluate(name, "Boosting (N=50)", [](){ 
+            BoostingRegressor b; b.n_estimators=50; b.max_depth=4; b.learning_rate=0.2; return b; 
+        }, X, y);
+    }
 
     return 0;
 }
