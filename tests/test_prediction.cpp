@@ -1,27 +1,33 @@
 //S’assurer que predict() ne plante pas et retourne une valeur valide
-
 #include "DecisionTreeRegressor.hpp"
-#include <cassert>
-#include <iostream>
+#include "DataLoader.hpp"
+#include <gtest/gtest.h>
 #include <cmath>
 
-int main() {
-    std::vector<std::vector<double>> X = {
-        {0.1, 0.2},
-        {0.2, 0.3},
-        {0.3, 0.4},
-        {0.4, 0.5}
-    };
-    std::vector<double> y = {1.0, 1.5, 2.0, 2.5};
 
-    DecisionTreeRegressor tree;
-    tree.fit(X, y);
+TEST(DecisionTreeTest, PredictNotNaN) {
+   std::vector<std::vector<double>> X = {
+       {0.1, 0.2},
+       {0.2, 0.3},
+       {0.3, 0.4},
+       {0.4, 0.5}
+   };
+   std::vector<double> y = {1.0, 1.5, 2.0, 2.5};
 
-    double pred = tree.predict({0.25, 0.35});
 
-    assert(!std::isnan(pred));
-    assert(pred > 0.0);
+   DecisionTreeRegressor tree;
+   tree.fit(X, y);
 
-    std::cout << "test_prediction réussi" << std::endl;
-    return 0;
+
+   double pred = tree.predict({0.25, 0.35});
+
+
+   EXPECT_FALSE(std::isnan(pred));
+   EXPECT_GT(pred, 0.0);
+}
+
+
+int main(int argc, char **argv) {
+   ::testing::InitGoogleTest(&argc, argv);
+   return RUN_ALL_TESTS();
 }
