@@ -34,6 +34,13 @@ public:
                 std::cerr << "Ligne " << total_lines << " ignorée (mauvais format)" << std::endl;
                 continue;
             }
+           
+             // Filtrage des valeurs aberrantes : ignorer y = 30
+            if (row[10] == 30) {
+                continue; // ignorer cette ligne
+            }
+
+
             y.push_back(row.back());
             row.pop_back(); 
             X.push_back(row);  
