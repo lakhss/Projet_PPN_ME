@@ -34,7 +34,6 @@ endfunction()
 
 
 # ===== Tests unitaires =====
-# Si DataLoader.cpp existe, ajoute-le ici
 add_gtest_executable(test_dataloader    tests/test_dataloader.cpp src/DecisionTreeRegressor.cpp src/DataLoader.cpp)
 add_gtest_executable(test_mse           tests/test_mse.cpp src/DecisionTreeRegressor.cpp)
 add_gtest_executable(test_prediction    tests/test_prediction.cpp src/DecisionTreeRegressor.cpp)
