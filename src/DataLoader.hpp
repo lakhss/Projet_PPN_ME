@@ -35,10 +35,10 @@ public:
                 continue;
             }
            
-             // Filtrage des valeurs aberrantes : ignorer y = 30
-            if (row[10] == 30) {
-                continue; // ignorer cette ligne
-            }
+            // Filtrage des valeurs aberrantes : ignorer y = 30
+            //if (row[10] == 30) {
+              //  continue; // ignorer cette ligne
+           // }
 
 
             y.push_back(row.back());
