@@ -7,7 +7,7 @@ public:
     int n_estimators = 50;
     double learning_rate = 0.1;
     int max_depth = 3;
-    int min_samples_split = 10;
+    int min_samples_split = 6;
 
     void fit(const std::vector<std::vector<double>>& X,
              const std::vector<double>& y);
