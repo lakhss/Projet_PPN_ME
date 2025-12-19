@@ -8,12 +8,11 @@
 
 class DataLoader {
 public:
-    // Attention à la virgule après "& y" !
     static void load_csv(const std::string& filename,
                          std::vector<std::vector<double>>& X,
                          std::vector<double>& y,
-                         double max_perf_threshold = 26.0, // Valeur par défaut
-                         size_t reserve_size = 35000)      // Valeur par défaut
+                         double max_perf_threshold = 26.0, 
+                         size_t reserve_size = 35000)      
     {
         std::ifstream file(filename);
         if (!file.is_open()) {
@@ -21,14 +20,13 @@ public:
             return;
         }
 
-        // Nettoyage et réservation mémoire (Optimisation HPC)
-        X.clear();
+        // Nettoyage et réservation mémoire 
         y.clear();
         X.reserve(reserve_size);
         y.reserve(reserve_size);
 
         std::string line;
-        std::getline(file, line); // On saute le header
+        std::getline(file, line); 
 
         int total_lines = 0;
         int kept_lines = 0;
@@ -45,7 +43,7 @@ public:
             }
 
             if (row.size() != 11) {
-                continue; // Ligne mal formée
+                continue; 
             }
 
             double perf_val = row.back();
