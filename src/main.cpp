@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     else if (choice == 7) {
         std::cout << "=== MODE 7 : ETUDE DE CONVERGENCE (Parametric Study) ===\n" << std::endl;
         
-        // On focus sur le plus gros dataset pour l'étude de charge
+        // change dataset to benchmark convergence
         std::string dataset_path = "../datasets/15k_ga_adaptive.csv"; 
         std::string dataset_name = "Adaptive30k_Study";
         
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 
         PerformanceEvaluator::print_header();
 
-        // Plage de test étendue
+        
         std::vector<int> n_list = {1, 5, 10, 20, 30, 50, 75, 100};
 
         // PHASE A : BAGGING (Convergence de la Variance)
