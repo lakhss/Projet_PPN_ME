@@ -1,4 +1,3 @@
-//S’assurer que predict() ne plante pas et retourne une valeur valide
 #include "DecisionTreeRegressor.hpp"
 #include "DataLoader.hpp"
 #include <gtest/gtest.h>

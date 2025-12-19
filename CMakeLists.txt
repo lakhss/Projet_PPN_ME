@@ -26,15 +26,14 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
 
-# Fonction utilitaire pour créer des exécutables de tests avec GTest
+# utility function to add gtest executables
 function(add_gtest_executable exe_name src_file extra_cpp)
    add_executable(${exe_name} ${src_file} ${extra_cpp})
    target_link_libraries(${exe_name} ${GTEST_LIBRARIES} pthread)
 endfunction()
 
 
-# ===== Tests unitaires =====
-# Si DataLoader.cpp existe, ajoute-le ici
+# ===== Unit tests =====
 add_gtest_executable(test_dataloader    tests/test_dataloader.cpp src/DecisionTreeRegressor.cpp src/DataLoader.cpp)
 add_gtest_executable(test_mse           tests/test_mse.cpp src/DecisionTreeRegressor.cpp)
 add_gtest_executable(test_prediction    tests/test_prediction.cpp src/DecisionTreeRegressor.cpp)
