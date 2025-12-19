@@ -39,6 +39,24 @@ class Metrics {
         }
         return sum_abs_err / y_true.size();
     }
+
+    static double mean_absolute_percentage_error(const std::vector<double>& y_true, 
+                                                 const std::vector<double>& y_pred) {
+        if (y_true.size() != y_pred.size() || y_true.empty()) return 0.0;
+
+        double sum_ape = 0.0;
+        double epsilon = 1e-9; // Sécurité pour éviter la division par 0
+
+        for (size_t i = 0; i < y_true.size(); ++i) {
+            double denominator = std::abs(y_true[i]);
+            if (denominator < epsilon) denominator = epsilon; // On évite le crash
+            
+            sum_ape += std::abs((y_true[i] - y_pred[i]) / denominator);
+        }
+        
+        // On retourne un pourcentage 
+        return (sum_ape / y_true.size()) * 100.0; 
+    }
 };
 
 #endif
