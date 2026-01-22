@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
 
     std::ofstream outfile("results.csv");
     if (outfile.is_open()) {
-        outfile << "Dataset,Model,RMSE,MAE,Time\n"; 
+        outfile << "Dataset,Model,RMSE,MAE,MAPE,Time\n"; 
         outfile.close();
     }
 
@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
     std::map<std::string, std::string> all_datasets = {
         {"Adaptive", "../datasets/15k_ga_adaptive.csv"},
         {"HVS",      "../datasets/15k_hvs.csv"},
-        {"Random",   "../datasets/15k_random.csv"}
-        
+        {"Random",   "../datasets/15k_random.csv"},
+        {"Adaptive30k", "../datasets/30k_ga_adaptive.csv"}
     };
 
    
@@ -36,10 +36,12 @@ int main(int argc, char** argv) {
             std::cout << "\n################################################" << std::endl;
             std::cout << " CHARGEMENT : " << name << " (" << path << ")" << std::endl;
             std::cout << "################################################" << std::endl;
+             
+            double outlier_threshold = 26.0;
 
             std::vector<std::vector<double>> X;
             std::vector<double> y;
-            DataLoader::load_csv(path, X, y);
+            DataLoader::load_csv(path, X, y, outlier_threshold);
 
             if (X.empty()) {
                 std::cerr << "-> Erreur ou Fichier vide. Je passe au suivant." << std::endl;
@@ -49,7 +51,7 @@ int main(int argc, char** argv) {
             PerformanceEvaluator::print_header();
 
             // A. Étude Profondeur (Arbre)
-            std::vector<int> depths = {5, 10, 15, 20};
+            std::vector<int> depths = {5, 8, 10, 15};
             for (int d : depths) {
                 PerformanceEvaluator::evaluate(name, "Arbre (Depth=" + std::to_string(d) + ")", [d]() {
                     DecisionTreeRegressor t; t.max_depth = d; t.min_samples_split = 10; return t;
@@ -73,7 +75,50 @@ int main(int argc, char** argv) {
         }
         std::cout << "\nTerminé ! Résultats dans build/results.csv" << std::endl;
     } 
+    else if (choice == 7) {
+        std::cout << "=== MODE 7 : ETUDE DE CONVERGENCE (Parametric Study) ===\n" << std::endl;
+        
+        // change dataset to benchmark convergence
+        std::string dataset_path = "../datasets/15k_ga_adaptive.csv"; 
+        std::string dataset_name = "Adaptive30k_Study";
+        
+        std::vector<std::vector<double>> X;
+        std::vector<double> y;
+        DataLoader::load_csv(dataset_path, X, y, 26.0); 
 
+        if (X.empty()) return 1;
+
+        PerformanceEvaluator::print_header();
+
+        
+        std::vector<int> n_list = {1, 5, 10, 20, 30, 50, 75, 100};
+
+        // PHASE A : BAGGING (Convergence de la Variance)
+        std::cout << "\n--- ETUDE BAGGING (Depth=12) ---\n";
+        for (int n : n_list) {
+            std::string name = "Bag_D12_N" + std::to_string(n);
+            PerformanceEvaluator::evaluate(dataset_name, name, [n]() {
+                BaggingRegressor b; b.n_estimators = n; b.max_depth = 12; return b;
+            }, X, y);
+        }
+
+        // PHASE B : BOOSTING (Comparaison Robustesse D=4 vs D=8)
+        std::cout << "\n--- ETUDE BOOSTING WEAK (Depth=4) ---\n";
+        for (int n : n_list) {
+            std::string name = "Boost_D4_N" + std::to_string(n);
+            PerformanceEvaluator::evaluate(dataset_name, name, [n]() {
+                BoostingRegressor b; b.n_estimators = n; b.max_depth = 4; b.learning_rate = 0.2; return b;
+            }, X, y);
+        }
+        
+        std::cout << "\n--- ETUDE BOOSTING MEDIUM (Depth=8) ---\n";
+        for (int n : n_list) {
+            std::string name = "Boost_D8_N" + std::to_string(n);
+            PerformanceEvaluator::evaluate(dataset_name, name, [n]() {
+                BoostingRegressor b; b.n_estimators = n; b.max_depth = 8; b.learning_rate = 0.2; return b;
+            }, X, y);
+        }
+    }
     else {
         std::string path;
         std::string name = "SingleRun"; 

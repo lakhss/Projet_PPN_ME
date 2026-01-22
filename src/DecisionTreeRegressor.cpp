@@ -4,6 +4,12 @@
 #include <random>
 #include <iostream>
 
+/**
+ * * * @brief calculate Mean Squared Error of given targets
+ * * @param y Target values
+ * * @return MSE value 
+ */
+
 double DecisionTreeRegressor::mse(const std::vector<double>& y) {
     if (y.size() <= 1) return 0.0;
     double mean = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
@@ -14,16 +20,24 @@ double DecisionTreeRegressor::mse(const std::vector<double>& y) {
  
 
 // opti du find best split
+/**
+ * * @brief find the best feature and threshold to split the node
+ * * @param indices Indices of samples in the current node
+ * * @param X Feature matrix
+ * * @param y Target values
+ * * @return tuple (best_feature_index, best_threshold, best_gain)
+ */
 std::tuple<int, double, double> DecisionTreeRegressor::find_best_split(
     const std::vector<size_t>& indices,
     const std::vector<std::vector<double>>& X,
     const std::vector<double>& y) { 
 
-    int best_feat = -1;
-    double best_thr = 0.0;
-    double best_gain = -1.0; // Initialisé à -1 pour être sûr
+    int best_feat = -1;  
+    double best_thr = 0.0; 
+    double best_gain = -1.0; 
 
-    // on fait un pre calcul pour le noeud parent
+    
+    // compute global sums and sq sums for mse calculation
     double global_sum = 0.0;
     double global_sq_sum = 0.0; 
     for (size_t i : indices) {

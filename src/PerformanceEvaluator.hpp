@@ -15,6 +15,7 @@ struct EvalResult {
     double mse;
     double rmse;
     double mae;
+    double mape;
     double time_sec;
 };
 
@@ -23,11 +24,12 @@ public:
     static void log_to_csv(const std::string& dataset_name, const std::string& model_name, const EvalResult& res) {
         std::ofstream outfile("results.csv", std::ios::app);
         if (outfile.is_open()) {
-            // Format : Dataset,Model,RMSE,MAE,Time
+            // Format : Dataset,Model,RMSE,MAE, MAPE, Time
             outfile << dataset_name << "," 
                     << model_name << "," 
                     << res.rmse << "," 
                     << res.mae << "," 
+                    << res.mape << ","
                     << res.time_sec << "\n";
             outfile.close();
         }
@@ -53,7 +55,7 @@ public:
                              const std::vector<double>& y,
                              int k_folds) {
         auto folds = CrossValidation::k_fold_split(X.size(), k_folds, 42);
-        double t_rmse = 0, t_mae = 0, t_time = 0;
+        double t_rmse = 0, t_mae = 0, t_mape = 0, t_time = 0;
 
         for (int k = 0; k < k_folds; ++k) {
             std::vector<std::vector<double>> X_train, X_test;
@@ -72,9 +74,10 @@ public:
             double mse = Metrics::mean_squared_error(y_test, preds);
             t_rmse += std::sqrt(mse);
             t_mae += Metrics::mean_absolute_error(y_test, preds);
+            t_mape += Metrics::mean_absolute_percentage_error(y_test, preds);
             t_time += std::chrono::duration<double>(end - start).count();
         }
-        return { 0.0, t_rmse / k_folds, t_mae / k_folds, t_time / k_folds };
+        return { 0.0, t_rmse / k_folds, t_mae / k_folds, t_mape / k_folds, t_time / k_folds };
     }
 
     template <typename ModelCreator>
@@ -90,6 +93,7 @@ public:
         // Affichage Console
         std::cout << std::left << std::setw(30) << model_name 
                   << std::setw(12) << res.rmse 
+                  << std::setw(12) << res.mape << "%"
                   << std::setw(12) << res.time_sec << "s" << std::endl;
 
         // Enregistrement CSV
@@ -98,7 +102,7 @@ public:
 
     static void print_header() {
         std::cout << std::string(60, '-') << std::endl;
-        std::cout << std::left << std::setw(30) << "Modele" << std::setw(12) << "RMSE" << std::setw(12) << "Temps" << std::endl;
+        std::cout << std::left << std::setw(30) << "Modele" << std::setw(12) << "RMSE" << std::setw(12) << std::setw(12) << "MAPE" << "Temps" << std::endl;
         std::cout << std::string(60, '-') << std::endl;
-    }
+    } 
 };

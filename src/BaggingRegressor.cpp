@@ -1,5 +1,5 @@
 #include "BaggingRegressor.hpp"
-#include <algorithm>
+#include <algorithm>  
 #include <iostream>
 #include <random>
 
@@ -17,10 +17,13 @@
 
 void BaggingRegressor::fit(const std::vector<std::vector<double>>& X,
                            const std::vector<double>& y) {
-    trees.clear();
-    trees.reserve(n_estimators);
+    trees.clear();                 // Clear any existing trees
+    trees.reserve(n_estimators);   
 
-    const size_t N = X.size();
+    const size_t N = X.size();    
+    
+    
+
 
     /**
      * @brief Size of the bootstrap sample
@@ -28,10 +31,13 @@ void BaggingRegressor::fit(const std::vector<std::vector<double>>& X,
      * Defined as a fraction of the total dataset size,
      * with a minimum value of 1.
      */
-    const size_t m = std::max<size_t>(1, (size_t)(sample_ratio * N));
+    const size_t m = std::max<size_t>(1, (size_t)(sample_ratio * N));  // size of bootstrap sample
 
-    std::mt19937 gen(seed);
+    std::mt19937 gen(seed);        // Random number generator
     std::uniform_int_distribution<size_t> dist(0, N - 1);
+
+
+
 
     /**
      * @brief Main bagging loop
@@ -47,17 +53,17 @@ void BaggingRegressor::fit(const std::vector<std::vector<double>>& X,
         Xb.reserve(m);
         yb.reserve(m);
 
-        // Bootstrap uniforme (tirage avec remise)
-        for (size_t i = 0; i < m; ++i) {
-            size_t j = dist(gen);
+        // uniform bootstrap: sampling with replacement
+        for (size_t i = 0; i < m; ++i) {    
+            size_t j = dist(gen);      // Random index in [0, N-1]
             Xb.push_back(X[j]);
             yb.push_back(y[j]);
         }
 
-        trees.emplace_back();
+        trees.emplace_back();     // Add a new tree
         trees.back().max_depth = max_depth;
         trees.back().min_samples_split = min_samples_split;
-        trees.back().fit(Xb, yb);
+        trees.back().fit(Xb, yb);   // Train the tree on the bootstrap sample
     }
 
     std::cout << "Bagging terminé (" << n_estimators
