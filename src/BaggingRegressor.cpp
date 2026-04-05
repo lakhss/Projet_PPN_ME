@@ -20,10 +20,11 @@ void BaggingRegressor::fit(const std::vector<std::vector<double>>& X,
     trees.clear();                 // Clear any existing trees
     trees.reserve(n_estimators);   
 
-    const size_t N = X.size();    
-    
-    
-
+    const size_t N = X.size();
+    if (N == 0 || y.empty() || X.size() != y.size()) {
+        std::cerr << "Bagging: dataset vide ou invalide." << std::endl;
+        return;
+    }
 
     /**
      * @brief Size of the bootstrap sample
@@ -66,10 +67,6 @@ void BaggingRegressor::fit(const std::vector<std::vector<double>>& X,
         trees.back().fit(Xb, yb);   // Train the tree on the bootstrap sample
     }
 
-    std::cout << "Bagging terminé (" << n_estimators
-              << " arbres, max_depth = " << max_depth
-              << ", min_samples_split = " << min_samples_split
-              << ")\n";
 }
 
 
