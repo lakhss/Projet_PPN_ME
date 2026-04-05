@@ -1,5 +1,3 @@
-
-
 cmake_minimum_required(VERSION 3.14)
 project(ProjetPPNME LANGUAGES CXX)
 
@@ -15,6 +13,7 @@ add_compile_options(-O3 -Wall -Wextra)
 set(PROJECT_SOURCES
     src/main.cpp
     src/DecisionTreeRegressor.cpp
+    src/HistogramTreeRegressor.cpp
     src/BaggingRegressor.cpp
     src/BoostingRegressor.cpp
 )
@@ -27,7 +26,11 @@ if(BUILD_TESTS)
     include_directories(${GTEST_INCLUDE_DIRS})
 
     function(add_gtest_executable exe_name src_file)
-        add_executable(${exe_name} ${src_file} src/DecisionTreeRegressor.cpp)
+        add_executable(${exe_name}
+            ${src_file}
+            src/DecisionTreeRegressor.cpp
+            src/HistogramTreeRegressor.cpp
+        )
         target_link_libraries(${exe_name} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARY} pthread)
         add_test(NAME ${exe_name} COMMAND ${exe_name})
     endfunction()

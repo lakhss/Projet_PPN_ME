@@ -4,6 +4,7 @@
 #include "BoostingRegressor.hpp"
 #include "PerformanceEvaluator.hpp"
 #include "Matrix.hpp"
+#include "HistogramTreeRegressor.hpp"
 
 #include <vector>
 #include <iostream>
@@ -75,6 +76,17 @@ int main(int argc, char** argv) {
                     return t;
                 }, X, y);
             }
+
+            // Etude de l'arbre histogramme
+            for (int d : depths) {
+                PerformanceEvaluator::evaluate(name, "HistTree (D=" + std::to_string(d) + ", B=16)", [d]() {
+                    HistogramTreeRegressor t;
+                    t.max_depth = d;
+                    t.min_samples_split = 10;
+                    t.n_bins = 16;
+                    return t;
+                }, X, y);
+            }  
 
             std::vector<int> n_trees = {10, 30, 50};
             for (int n : n_trees) {
@@ -202,6 +214,16 @@ int main(int argc, char** argv) {
             t.min_samples_split = 10;
             return t;
         }, X, y);
+
+        // Etude de l'arbre histogramme
+        PerformanceEvaluator::evaluate(name, "HistTree (D=12, B=16)", []() {
+            HistogramTreeRegressor t;
+            t.max_depth = 12;
+            t.min_samples_split = 10;
+            t.n_bins = 16;
+            return t;
+        }, X, y);
+
 
         PerformanceEvaluator::evaluate(name, "Bagging (N=20)", []() {
             BaggingRegressor b;
