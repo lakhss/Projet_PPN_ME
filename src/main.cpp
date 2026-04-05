@@ -5,6 +5,7 @@
 #include "PerformanceEvaluator.hpp"
 #include "Matrix.hpp"
 #include "HistogramTreeRegressor.hpp"
+#include "HistogramBaggingRegressor.hpp"
 
 #include <vector>
 #include <iostream>
@@ -107,7 +108,19 @@ int main(int argc, char** argv) {
                     return bg;
                 }, X, y);
             }
+        
+           
+            for (int n : n_trees) {
+                PerformanceEvaluator::evaluate(name, "HistBagging (N=" + std::to_string(n) + ", B=32)", [n]() {
+                    HistogramBaggingRegressor bg;
+                    bg.n_estimators = n;
+                    bg.max_depth = 12;
+                    bg.n_bins = 32;
+                    return bg;
+                }, X, y);
+           }
         }
+
 
         std::cout << "\nTerminé ! Résultats dans results.csv" << std::endl;
     }
@@ -284,8 +297,8 @@ int main(int argc, char** argv) {
 
 
 
-          // Etude de l'arbre histogramme avec plusieurs nombres de bins
-        /*PerformanceEvaluator::evaluate(name, "HistTree (D=12, B=8)", []() {
+        /*Etude de l'arbre histogramme avec plusieurs nombres de bins
+        PerformanceEvaluator::evaluate(name, "HistTree (D=12, B=8)", []() {
             HistogramTreeRegressor t;
             t.max_depth = 12;
             t.min_samples_split = 10;
@@ -314,6 +327,14 @@ int main(int argc, char** argv) {
             BaggingRegressor b;
             b.n_estimators = 20;
             b.max_depth = 12;
+            return b;
+        }, X, y);
+
+        PerformanceEvaluator::evaluate(name, "HistBagging (N=20, B=32)", []() {
+            HistogramBaggingRegressor b;
+            b.n_estimators = 20;
+            b.max_depth = 12;
+            b.n_bins = 32;
             return b;
         }, X, y);
 

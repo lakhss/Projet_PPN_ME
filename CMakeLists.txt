@@ -16,6 +16,8 @@ set(PROJECT_SOURCES
     src/HistogramTreeRegressor.cpp
     src/BaggingRegressor.cpp
     src/BoostingRegressor.cpp
+    src/HistogramBaggingRegressor.cpp
+    
 )
 
 add_executable(main ${PROJECT_SOURCES})
