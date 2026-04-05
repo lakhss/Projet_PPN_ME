@@ -215,12 +215,30 @@ int main(int argc, char** argv) {
             return t;
         }, X, y);
 
-        // Etude de l'arbre histogramme
-        PerformanceEvaluator::evaluate(name, "HistTree (D=12, B=16)", []() {
+
+
+          // Etude de l'arbre histogramme avec plusieurs nombres de bins
+        /*PerformanceEvaluator::evaluate(name, "HistTree (D=12, B=8)", []() {
+            HistogramTreeRegressor t;
+            t.max_depth = 12;
+            t.min_samples_split = 10;
+            t.n_bins = 8;
+            return t;
+        }, X, y);
+
+        /*PerformanceEvaluator::evaluate(name, "HistTree (D=12, B=16)", []() {
             HistogramTreeRegressor t;
             t.max_depth = 12;
             t.min_samples_split = 10;
             t.n_bins = 16;
+            return t;
+        }, X, y);*/
+
+        PerformanceEvaluator::evaluate(name, "HistTree (D=12, B=32)", []() {
+            HistogramTreeRegressor t;
+            t.max_depth = 12;
+            t.min_samples_split = 10;
+            t.n_bins = 32;
             return t;
         }, X, y);
 
