@@ -2,6 +2,8 @@
 
 #include "CrossValidation.hpp"
 #include "Metrics.hpp"
+#include "Matrix.hpp"
+
 #include <vector>
 #include <iostream>
 #include <iomanip>
@@ -21,59 +23,80 @@ struct EvalResult {
 
 class PerformanceEvaluator {
 public:
-    static void log_to_csv(const std::string& dataset_name, const std::string& model_name, const EvalResult& res) {
+    static void log_to_csv(const std::string& dataset_name,
+                           const std::string& model_name,
+                           const EvalResult& res) {
         std::ofstream outfile("results.csv", std::ios::app);
         if (outfile.is_open()) {
-            // Format : Dataset,Model,RMSE,MAE, MAPE, Time
-            outfile << dataset_name << "," 
-                    << model_name << "," 
-                    << res.rmse << "," 
-                    << res.mae << "," 
+            outfile << dataset_name << ","
+                    << model_name << ","
+                    << res.rmse << ","
+                    << res.mae << ","
                     << res.mape << ","
                     << res.time_sec << "\n";
             outfile.close();
         }
     }
 
-    static void get_subset(const std::vector<std::vector<double>>& X_full,
+    static void get_subset(const Matrix& X_full,
                            const std::vector<double>& y_full,
                            const std::vector<size_t>& indices,
-                           std::vector<std::vector<double>>& X_out,
+                           Matrix& X_out,
                            std::vector<double>& y_out) {
-        X_out.clear(); y_out.clear();
-        X_out.reserve(indices.size());
+        y_out.clear();
         y_out.reserve(indices.size());
-        for (size_t i : indices) {
-            X_out.push_back(X_full[i]);
+
+        if (indices.empty()) {
+            X_out.resize(0, X_full.cols());
+            return;
+        }
+
+        X_out.resize(indices.size(), X_full.cols());
+
+        for (size_t r = 0; r < indices.size(); ++r) {
+            size_t i = indices[r];
+            for (size_t c = 0; c < X_full.cols(); ++c) {
+                X_out(r, c) = X_full(i, c);
+            }
             y_out.push_back(y_full[i]);
         }
     }
 
     template <typename ModelCreator>
     static EvalResult run_cv(ModelCreator model_creator,
-                             const std::vector<std::vector<double>>& X,
+                             const Matrix& X,
                              const std::vector<double>& y,
                              int k_folds) {
-        if (X.empty() || y.empty() || X.size() != y.size() || k_folds <= 0) {
+        if (X.empty() || y.empty() || X.rows() != y.size() || k_folds <= 0) {
             return {0.0, 0.0, 0.0, 0.0, 0.0};
         }
 
-        auto folds = CrossValidation::k_fold_split(X.size(), k_folds, 42);
-        double t_rmse = 0, t_mae = 0, t_mape = 0, t_time = 0;
+        auto folds = CrossValidation::k_fold_split(X.rows(), k_folds, 42);
+
+        double t_rmse = 0.0;
+        double t_mae = 0.0;
+        double t_mape = 0.0;
+        double t_time = 0.0;
 
         for (int k = 0; k < k_folds; ++k) {
-            std::vector<std::vector<double>> X_train, X_test;
+            Matrix X_train, X_test;
             std::vector<double> y_train, y_test;
+
             get_subset(X, y, folds[k].train_idx, X_train, y_train);
             get_subset(X, y, folds[k].test_idx, X_test, y_test);
 
-            auto model = model_creator(); 
+            auto model = model_creator();
+
             auto start = std::chrono::high_resolution_clock::now();
             model.fit(X_train, y_train);
             auto end = std::chrono::high_resolution_clock::now();
-            
+
             std::vector<double> preds;
-            for (const auto& row : X_test) preds.push_back(model.predict(row));
+            preds.reserve(X_test.rows());
+
+            for (size_t i = 0; i < X_test.rows(); ++i) {
+                preds.push_back(model.predict(X_test.row(i)));
+            }
 
             double mse = Metrics::mean_squared_error(y_test, preds);
             t_rmse += std::sqrt(mse);
@@ -81,29 +104,32 @@ public:
             t_mape += Metrics::mean_absolute_percentage_error(y_test, preds);
             t_time += std::chrono::duration<double>(end - start).count();
         }
-        return { 0.0, t_rmse / k_folds, t_mae / k_folds, t_mape / k_folds, t_time / k_folds };
+
+        return {0.0,
+                t_rmse / k_folds,
+                t_mae / k_folds,
+                t_mape / k_folds,
+                t_time / k_folds};
     }
 
     template <typename ModelCreator>
     static void evaluate(const std::string& dataset_name,
                          const std::string& model_name,
                          ModelCreator model_creator,
-                         const std::vector<std::vector<double>>& X,
+                         const Matrix& X,
                          const std::vector<double>& y,
                          int k_folds = 5) {
-        
+
         EvalResult res = run_cv(model_creator, X, y, k_folds);
 
-        // Affichage Console
         std::cout << std::fixed << std::setprecision(6);
-        std::cout << std::left 
-                  << std::setw(30) << model_name 
-                  << std::setw(12) << res.rmse 
-                  << std::setw(12) << res.mape 
-                  << std::setw(12) << res.time_sec << "s" 
+        std::cout << std::left
+                  << std::setw(30) << model_name
+                  << std::setw(12) << res.rmse
+                  << std::setw(12) << res.mape
+                  << std::setw(12) << res.time_sec << "s"
                   << std::endl;
 
-        // Enregistrement CSV
         log_to_csv(dataset_name, model_name, res);
     }
 
@@ -116,5 +142,5 @@ public:
                   << std::setw(12) << "Temps"
                   << std::endl;
         std::cout << std::string(60, '-') << std::endl;
-}
+    }
 };

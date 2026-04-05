@@ -1,63 +1,62 @@
 #include "BoostingRegressor.hpp"
+#include "Matrix.hpp"
+
 #include <numeric>
 #include <iostream>
 
-
 /**
- * * @brief train the Boosting Regressor on the given data
- *   
- * * The Boosting Regressor builds an ensemble of Decision Trees
- * * Each tree is trained on the residuals of the previous trees' predictions
- * * @param X Feature matrix
- * * @param y Target values
- * 
+ * @brief Train the Boosting Regressor on the given data
  */
-void BoostingRegressor::fit(const std::vector<std::vector<double>>& X,
+void BoostingRegressor::fit(const Matrix& X,
                             const std::vector<double>& y) {
 
     trees.clear();
     trees.reserve(n_estimators);
 
-    if (X.empty() || y.empty() || X.size() != y.size()) {
+    if (X.empty() || y.empty() || X.rows() != y.size()) {
         std::cerr << "Boosting: dataset vide ou invalide." << std::endl;
         init_value = 0.0;
         return;
     }
 
-    //Initialization: constant prediction = mean of y
+    // Initial prediction = mean of y
     init_value = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
 
     std::vector<double> preds(y.size(), init_value);
-    std::vector<double> residuals(y.size());  // to store residuals
+    std::vector<double> residuals(y.size());
 
     for (int m = 0; m < n_estimators; ++m) {
-        for (size_t i = 0; i < y.size(); ++i)
-            residuals[i] = y[i] - preds[i]; // residual = true value - current prediction
 
-        // Train a new Decision Tree on the residuals
+        // compute residuals
+        for (size_t i = 0; i < y.size(); ++i) {
+            residuals[i] = y[i] - preds[i];
+        }
+
+        // train tree
         DecisionTreeRegressor tree;
         tree.max_depth = max_depth;
         tree.min_samples_split = min_samples_split;
         tree.fit(X, residuals);
 
-        // Update predictions
-        for (size_t i = 0; i < X.size(); ++i)
-            preds[i] += learning_rate * tree.predict(X[i]);
+        // update predictions
+        for (size_t i = 0; i < X.rows(); ++i) {
+            std::vector<double> row = X.row(i); // conversion simple
+            preds[i] += learning_rate * tree.predict(row);
+        }
 
         trees.push_back(std::move(tree));
     }
 }
+
 /**
- * * @brief predict the value of a sample
- * 
- * * The prediction is the sum of the initial prediction and
- * * the contributions from each tree in the ensemble
- * * @param x Input sample
- * * @return Predicted value
+ * @brief Predict value
  */
 double BoostingRegressor::predict(const std::vector<double>& x) const {
     double y_pred = init_value;
-    for (const auto& t : trees)  // iterate through each tree
+
+    for (const auto& t : trees) {
         y_pred += learning_rate * t.predict(x);
+    }
+
     return y_pred;
 }
