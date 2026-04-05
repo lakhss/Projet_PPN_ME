@@ -54,6 +54,10 @@ public:
                              const std::vector<std::vector<double>>& X,
                              const std::vector<double>& y,
                              int k_folds) {
+        if (X.empty() || y.empty() || X.size() != y.size() || k_folds <= 0) {
+            return {0.0, 0.0, 0.0, 0.0, 0.0};
+        }
+
         auto folds = CrossValidation::k_fold_split(X.size(), k_folds, 42);
         double t_rmse = 0, t_mae = 0, t_mape = 0, t_time = 0;
 
@@ -91,10 +95,13 @@ public:
         EvalResult res = run_cv(model_creator, X, y, k_folds);
 
         // Affichage Console
-        std::cout << std::left << std::setw(30) << model_name 
+        std::cout << std::fixed << std::setprecision(6);
+        std::cout << std::left 
+                  << std::setw(30) << model_name 
                   << std::setw(12) << res.rmse 
-                  << std::setw(12) << res.mape << "%"
-                  << std::setw(12) << res.time_sec << "s" << std::endl;
+                  << std::setw(12) << res.mape 
+                  << std::setw(12) << res.time_sec << "s" 
+                  << std::endl;
 
         // Enregistrement CSV
         log_to_csv(dataset_name, model_name, res);
@@ -102,7 +109,12 @@ public:
 
     static void print_header() {
         std::cout << std::string(60, '-') << std::endl;
-        std::cout << std::left << std::setw(30) << "Modele" << std::setw(12) << "RMSE" << std::setw(12) << std::setw(12) << "MAPE" << "Temps" << std::endl;
+        std::cout << std::left
+                  << std::setw(30) << "Modele"
+                  << std::setw(12) << "RMSE"
+                  << std::setw(12) << "MAPE"
+                  << std::setw(12) << "Temps"
+                  << std::endl;
         std::cout << std::string(60, '-') << std::endl;
-    } 
+}
 };

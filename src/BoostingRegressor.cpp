@@ -1,5 +1,6 @@
 #include "BoostingRegressor.hpp"
 #include <numeric>
+#include <iostream>
 
 
 /**
@@ -14,12 +15,17 @@
 void BoostingRegressor::fit(const std::vector<std::vector<double>>& X,
                             const std::vector<double>& y) {
 
-    trees.clear();     
+    trees.clear();
     trees.reserve(n_estimators);
 
-  
+    if (X.empty() || y.empty() || X.size() != y.size()) {
+        std::cerr << "Boosting: dataset vide ou invalide." << std::endl;
+        init_value = 0.0;
+        return;
+    }
+
     //Initialization: constant prediction = mean of y
-    init_value = std::accumulate(y.begin(), y.end(), 0.0) / y.size();  
+    init_value = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
 
     std::vector<double> preds(y.size(), init_value);
     std::vector<double> residuals(y.size());  // to store residuals

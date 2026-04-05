@@ -11,22 +11,24 @@ public:
     static void load_csv(const std::string& filename,
                          std::vector<std::vector<double>>& X,
                          std::vector<double>& y,
-                         double max_perf_threshold = 26.0, 
-                         size_t reserve_size = 35000)      
+                         double max_perf_threshold = 26.0,
+                         size_t reserve_size = 35000)
     {
         std::ifstream file(filename);
         if (!file.is_open()) {
             std::cerr << "ERREUR : Impossible d'ouvrir " << filename << std::endl;
+            X.clear();
+            y.clear();
             return;
         }
 
-        // Nettoyage et réservation mémoire 
+        X.clear();
         y.clear();
         X.reserve(reserve_size);
         y.reserve(reserve_size);
 
         std::string line;
-        std::getline(file, line); 
+        std::getline(file, line);
 
         int total_lines = 0;
         int kept_lines = 0;
@@ -43,26 +45,24 @@ public:
             }
 
             if (row.size() != 11) {
-                continue; 
+                continue;
             }
 
-            double perf_val = row.back();
-
-            // FILTRAGE : Si la perf dépasse le seuil, on ignore la ligne
+            const double perf_val = row.back();
             if (perf_val > max_perf_threshold) {
-                continue; 
+                continue;
             }
 
-            y.push_back(perf_val);
-            row.pop_back(); 
+            row.pop_back();
             X.push_back(row);
+            y.push_back(perf_val);
             kept_lines++;
         }
 
-        std::cout << "[DataLoader] " << filename 
+        std::cout << "[DataLoader] " << filename
                   << " : " << kept_lines << " lignes chargees"
-                  << " (Filtres: " << (total_lines - kept_lines) 
-                  << ", Seuil=" << max_perf_threshold << ")" 
+                  << " (Filtres: " << (total_lines - kept_lines)
+                  << ", Seuil=" << max_perf_threshold << ")"
                   << std::endl;
     }
 };

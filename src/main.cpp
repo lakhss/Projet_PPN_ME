@@ -9,6 +9,23 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include <filesystem>
+
+static std::string resolve_dataset_path(const std::string& relative_path) {
+    namespace fs = std::filesystem;
+    const std::vector<fs::path> candidates = {
+        fs::path(relative_path),
+        fs::path("../") / relative_path,
+        fs::path("../../") / relative_path,
+        fs::path("datasets") / fs::path(relative_path).filename()
+    };
+
+    for (const auto& p : candidates) {
+        if (fs::exists(p)) return p.string();
+    }
+    return relative_path;
+}
+
 
 int main(int argc, char** argv) {
 
@@ -41,7 +58,7 @@ int main(int argc, char** argv) {
 
             std::vector<std::vector<double>> X;
             std::vector<double> y;
-            DataLoader::load_csv(path, X, y, outlier_threshold);
+            DataLoader::load_csv(resolve_dataset_path(path), X, y, outlier_threshold);
 
             if (X.empty()) {
                 std::cerr << "-> Erreur ou Fichier vide. Je passe au suivant." << std::endl;
@@ -84,7 +101,7 @@ int main(int argc, char** argv) {
         
         std::vector<std::vector<double>> X;
         std::vector<double> y;
-        DataLoader::load_csv(dataset_path, X, y, 26.0); 
+        DataLoader::load_csv(resolve_dataset_path(dataset_path), X, y, 26.0); 
 
         if (X.empty()) return 1;
 
@@ -134,6 +151,7 @@ int main(int argc, char** argv) {
         std::cout << "Dataset : " << path << std::endl;
         std::vector<std::vector<double>> X;
         std::vector<double> y;
+        path = resolve_dataset_path(path);
         DataLoader::load_csv(path, X, y);
         
         PerformanceEvaluator::print_header();
