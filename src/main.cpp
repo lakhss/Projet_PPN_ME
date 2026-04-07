@@ -6,6 +6,7 @@
 #include "Matrix.hpp"
 #include "HistogramTreeRegressor.hpp"
 #include "HistogramBaggingRegressor.hpp"
+#include "HistogramBoostingRegressor.hpp"
 
 #include <vector>
 #include <iostream>
@@ -96,6 +97,17 @@ int main(int argc, char** argv) {
                     b.n_estimators = n;
                     b.max_depth = 4;
                     b.learning_rate = 0.2;
+                    return b;
+                }, X, y);
+            }
+
+            for (int n : n_trees) {
+                PerformanceEvaluator::evaluate(name, "HistBoosting (N=" + std::to_string(n) + ", B=32)", [n]() {
+                    HistogramBoostingRegressor b;
+                    b.n_estimators = n;
+                    b.max_depth = 4;
+                    b.learning_rate = 0.2;
+                    b.n_bins = 32;
                     return b;
                 }, X, y);
             }
@@ -343,6 +355,15 @@ int main(int argc, char** argv) {
             b.n_estimators = 50;
             b.max_depth = 4;
             b.learning_rate = 0.2;
+            return b;
+        }, X, y);
+
+        PerformanceEvaluator::evaluate(name, "HistBoosting (N=50, B=16)", []() {
+            HistogramBoostingRegressor b;
+            b.n_estimators = 50;
+            b.max_depth = 4;
+            b.learning_rate = 0.2;
+            b.n_bins = 16;
             return b;
         }, X, y);
     }

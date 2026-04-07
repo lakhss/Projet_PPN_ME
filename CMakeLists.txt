@@ -17,6 +17,7 @@ set(PROJECT_SOURCES
     src/BaggingRegressor.cpp
     src/BoostingRegressor.cpp
     src/HistogramBaggingRegressor.cpp
+    src/HistogramBoostingRegressor.cpp
     
 )
 
