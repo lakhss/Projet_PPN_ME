@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(BUILD_TESTS "Build unit tests" OFF)
 
 include_directories(src)
-add_compile_options(-O3 -Wall -Wextra)
+add_compile_options(-O3 -Wall -Wextra -march=native)
 
 set(PROJECT_SOURCES
     src/main.cpp
