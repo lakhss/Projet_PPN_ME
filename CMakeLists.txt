@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(ProjetPPNME LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -8,7 +8,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(BUILD_TESTS "Build unit tests" OFF)
 
 include_directories(src)
-add_compile_options(-O3 -Wall -Wextra)
+
+
+#note for myself :
+# -flto : Link Time Optimization. Permet d'inliner les fonctions même à travers 
+#         différents fichiers .cpp, éliminant l'overhead des appels de fonctions.
+# -fno-omit-frame-pointer : Interdit au compilateur de supprimer le registre RBP. 
+#                           C'est obligatoire pour que AMDuProf et perf 
+#                           puissent reconstruire la pile d'appel (Call Stack) sans erreur.
+
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto -g -fno-omit-frame-pointer -Wall -Wextra")
 
 set(PROJECT_SOURCES
     src/main.cpp
@@ -16,10 +25,18 @@ set(PROJECT_SOURCES
     src/HistogramTreeRegressor.cpp
     src/BaggingRegressor.cpp
     src/BoostingRegressor.cpp
-    src/HistogramBaggingRegressor.cpp
-    src/HistogramBoostingRegressor.cpp
-    
+    #src/HistogramBaggingRegressor.cpp
+    #src/HistogramBoostingRegressor.cpp
+    src/Histogram.hpp
+    src/QuantizedDataset.hpp    
+    src/Node.hpp
+
 )
+find_package(OpenMP)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
 
 add_executable(main ${PROJECT_SOURCES})
 
@@ -42,4 +59,8 @@ if(BUILD_TESTS)
     add_gtest_executable(test_mse tests/test_mse.cpp)
     add_gtest_executable(test_prediction tests/test_prediction.cpp)
     add_gtest_executable(test_small_tree tests/test_small_tree.cpp)
+endif()
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(main PRIVATE OpenMP::OpenMP_CXX)
 endif()
