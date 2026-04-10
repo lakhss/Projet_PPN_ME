@@ -40,6 +40,8 @@ public:
     void fit(const QuantizedDataset& dataset);
     double predict(const std::vector<double>& x) const;
     
+    void fit_bootstrap(const QuantizedDataset& dataset, std::vector<std::size_t>& bootstrap_indices); 
+
     void print_tree(int node_idx = -1, int depth = 0) const;
     void export_to_dot(const std::string& filename) const;
 

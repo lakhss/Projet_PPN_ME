@@ -195,6 +195,13 @@ void HistogramTreeRegressor::fit(const QuantizedDataset& dataset) {
     root_idx_ = build(indices, 0, num_samples, 0, dataset);
 }
 
+void HistogramTreeRegressor::fit_bootstrap(const QuantizedDataset& dataset, std::vector<std::size_t>& bootstrap_indices) {
+    tree_nodes_.clear();
+    tree_nodes_.reserve( (1 << (max_depth + 1)) - 1 );
+
+    root_idx_ = build(bootstrap_indices, 0, bootstrap_indices.size(), 0, dataset);
+}
+
 double HistogramTreeRegressor::predict(const std::vector<double>& x) const {
     if (tree_nodes_.empty() || root_idx_ == -1) return 0.0;
 

@@ -25,12 +25,8 @@ set(PROJECT_SOURCES
     src/HistogramTreeRegressor.cpp
     src/BaggingRegressor.cpp
     src/BoostingRegressor.cpp
-    #src/HistogramBaggingRegressor.cpp
+    src/HistogramBaggingRegressor.cpp
     #src/HistogramBoostingRegressor.cpp
-    src/Histogram.hpp
-    src/QuantizedDataset.hpp    
-    src/Node.hpp
-
 )
 find_package(OpenMP)
 
