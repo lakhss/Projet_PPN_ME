@@ -32,6 +32,10 @@ void BaggingRegressor::fit(const std::vector<std::vector<double>>& X,
      * with a minimum value of 1.
      */
     const size_t m = std::max<size_t>(1, (size_t)(sample_ratio * N));  // size of bootstrap sample
+    std::random_device rd;
+
+    #pragma omp parallel
+    {
 
     std::mt19937 gen(seed);        // Random number generator
     std::uniform_int_distribution<size_t> dist(0, N - 1);
@@ -46,7 +50,7 @@ void BaggingRegressor::fit(const std::vector<std::vector<double>>& X,
      * - A bootstrap sample is generated
      * - A regression tree is trained on this sample
      */
-
+    #pragma omp for
     for (int b = 0; b < n_estimators; ++b) {
         std::vector<std::vector<double>> Xb;
         std::vector<double> yb;
@@ -64,6 +68,7 @@ void BaggingRegressor::fit(const std::vector<std::vector<double>>& X,
         trees.back().max_depth = max_depth;
         trees.back().min_samples_split = min_samples_split;
         trees.back().fit(Xb, yb);   // Train the tree on the bootstrap sample
+    }
     }
 
     std::cout << "Bagging terminé (" << n_estimators
