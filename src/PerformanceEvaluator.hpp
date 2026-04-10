@@ -160,11 +160,11 @@ public:
             Matrix X_train, X_test;
             std::vector<double> y_train, y_test;
 
-            // 1. Extraction standard (AoS) pour le split Train/Test
+            // extraction standard (AoS) pour le split Train/Test
             get_subset(X_full, y_full, folds[k].train_idx, X_train, y_train);
             get_subset(X_full, y_full, folds[k].test_idx, X_test, y_test);
 
-            // 2. Conversion vers l'Architecture SoA (QuantizedDataset)
+            // conversion vers l'Architecture SoA (QuantizedDataset)
             QuantizedDataset q_train;
             q_train.ingest_from_matrix(X_train, y_train);
 
@@ -174,7 +174,7 @@ public:
             model.fit(q_train); // Appel sur la structure SoA
             auto end = std::chrono::high_resolution_clock::now();
 
-            // 4. Phase d'Inférence (Prédiction)
+            // Phase d'Inférence (Prédiction)
             std::vector<double> preds;
             preds.reserve(X_test.rows());
 

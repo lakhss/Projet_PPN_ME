@@ -19,7 +19,7 @@ HistogramSplit HistogramTreeRegressor::find_best_split_histogram(
     const std::vector<std::size_t>& indices,
     std::size_t start,
     std::size_t end,
-    const QuantizedDataset& dataset) { // Nouvelle structure SoA avec Quantized
+    const QuantizedDataset& dataset) { // nouvelle structure SoA avec Quantized
 
     HistogramSplit best_split;
     std::size_t node_samples = end - start;
@@ -45,12 +45,12 @@ HistogramSplit HistogramTreeRegressor::find_best_split_histogram(
         
         FastBinStats hist[256] = {}; 
         
-        // On recup vers le tableau contigu (SoA)
+        // onrecup vers le tableau contigu (SoA)
         const auto& feature_col = dataset.get_feature_column(feat);
 
         for (std::size_t i = start; i < end; ++i) {
             std::size_t idx = indices[i];
-            uint8_t bin = feature_col[idx];  // En theorie ca va lire en flux lineaire 
+            uint8_t bin = feature_col[idx];  // en theorie ca va lire en flux lineaire 
             double target = y[idx];
 
             hist[bin].count++;
@@ -66,7 +66,7 @@ HistogramSplit HistogramTreeRegressor::find_best_split_histogram(
         double right_sq_sum = global_sq_sum;
         std::size_t right_count = node_samples;
 
-        // On itère sur les 255 coupures possibles (de gauche à droite) qui est le max bin 
+        // On itere sur les 255 coupures possibles (de gauche à droite) qui est le max bin 
         for (int b = 0; b < 255; ++b) {
             const FastBinStats& current = hist[b];
 
@@ -81,7 +81,7 @@ HistogramSplit HistogramTreeRegressor::find_best_split_histogram(
             right_sum -= current.sum;
             right_sq_sum -= current.sq_sum;
 
-            // Critère d'arrêt rapide pour éviter les divisions useless
+            // critère d'arret rapide pour éviter les divisions useless
             if (left_count < min_samples_split || right_count < min_samples_split) {
                 continue;
             }
@@ -96,7 +96,7 @@ HistogramSplit HistogramTreeRegressor::find_best_split_histogram(
 
             double gain = parent_mse - weighted_mse;
 
-            // Mise à jour si le gain est strictement supérieur
+            // Mise a jour si le gain est strictement supeerieur
             if (gain > best_split.gain) {
                 best_split.gain = gain;
                 best_split.feature_idx = static_cast<int>(feat);
@@ -117,7 +117,7 @@ int HistogramTreeRegressor::build(
     int depth,
     const QuantizedDataset& dataset) {
 
-    // 1. Allocation depuis le Pool
+    // Allocation depuis le Pool
     int node_idx = static_cast<int>(tree_nodes_.size());
     tree_nodes_.emplace_back(); 
     

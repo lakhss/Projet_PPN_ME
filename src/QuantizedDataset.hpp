@@ -113,7 +113,7 @@ public:
         binned_features_.resize(num_features_, std::vector<uint8_t>(num_samples_));
         meta_data_.resize(num_features_);
 
-        // La boucle de Transposition Row-Major (Matrix) -> Column-Major (SoA)
+        // Laboucle de Transposition Row-Major (Matrix) -> Column-Major (SoA)
         for (size_t f = 0; f < num_features_; ++f) {
             double min_val = raw_X(0, f);
             double max_val = raw_X(0, f);
