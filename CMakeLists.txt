@@ -26,9 +26,9 @@ set(PROJECT_SOURCES
     src/BaggingRegressor.cpp
     src/BoostingRegressor.cpp
     src/HistogramBaggingRegressor.cpp
-    #src/HistogramBoostingRegressor.cpp
+    src/HistogramBoostingRegressor.cpp
 )
-find_package(OpenMP)
+find_package(OpenMP REQUIRED)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)

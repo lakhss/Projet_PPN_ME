@@ -5,6 +5,7 @@
 #include "HistogramTreeRegressor.hpp"
 #include "QuantizedDataset.hpp"
 #include "HistogramBaggingRegressor.hpp"
+#include "HistogramBoostingRegressor.hpp"
 
 #include <vector>
 #include <iostream>
@@ -95,6 +96,18 @@ int main(int argc, char** argv) {
                 bg.max_depth = 12; 
                 bg.n_bins = 256;
                 return bg;
+            }, X, y);
+        }
+
+        for (int n : n_trees) {
+            PerformanceEvaluator::evaluate_hpc(name, "Boosting HPC (N=" + std::to_string(n) + ")", [n]() {
+                HistogramBoostingRegressor b;
+                b.n_estimators = n;
+                b.max_depth = 4;
+                b.min_samples_split = 10;
+                b.learning_rate = 0.2;
+                b.n_bins = 256;
+                return b;
             }, X, y);
         }
 
