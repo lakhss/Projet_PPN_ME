@@ -11,11 +11,11 @@ echo "Running C++ benchmark..."
 
 echo "Parsing results into CSV..."
 
-python3 parse_results_bag.py raw_output.txt $OUTPUT_FILE
+python3 parse_results_boost.py raw_output.txt $OUTPUT_FILE
 
 echo "Generating plot..."
 
-python3 double_plot_bag.py $OUTPUT_FILE $PLOT_FILE
+python3 double_plot_boost.py $OUTPUT_FILE $PLOT_FILE
 
 echo "Done."
 echo "CSV saved to: $OUTPUT_FILE"

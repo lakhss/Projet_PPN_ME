@@ -17,7 +17,7 @@ include_directories(src)
 #                           C'est obligatoire pour que AMDuProf et perf 
 #                           puissent reconstruire la pile d'appel (Call Stack) sans erreur.
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto -fopenmp -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto -Wall -Wextra")
 
 set(PROJECT_SOURCES
     src/main.cpp

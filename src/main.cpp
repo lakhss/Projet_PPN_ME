@@ -5,12 +5,9 @@
 #include "HistogramTreeRegressor.hpp"
 #include "QuantizedDataset.hpp"
 #include "HistogramBaggingRegressor.hpp"
-<<<<<<< HEAD
 #include "BaggingRegressor.hpp"
 #include "BoostingRegressor.hpp"
-=======
 #include "HistogramBoostingRegressor.hpp"
->>>>>>> 5e8f07fd7b6900393537b2efe1f186d8bd50e1d1
 
 #include <vector>
 #include <iostream>
@@ -121,11 +118,11 @@ int main(int argc, char** argv) {
             }, X, y);
         }
 
-        
+        */
 
         std::vector<int> n_trees = {10, 30, 50, 100}; // On monte jusqu'à 100 arbres pour saturer les cœurs
 
-        for (int n : n_trees) {
+        /*
         PerformanceEvaluator::evaluate(name, "Boosting Naïf (N=" + std::to_string(n) + ")", [n]() {
             BoostingRegressor bg;
             bg.n_estimators = n;
@@ -134,9 +131,40 @@ int main(int argc, char** argv) {
             return bg;
         },
         X, y);
+    } 
+
+
+        for (int n : n_trees) {
+        PerformanceEvaluator::evaluate(name, "Bagging Naïf (N=" + std::to_string(n) + ")", [n]() {
+            BaggingRegressor bg;
+            bg.n_estimators = n;
+            bg.max_depth = 12;
+            return bg;
+        },
+        X, y);
+    } */
+
+    for (int n : n_trees) {
+    PerformanceEvaluator::evaluate(name, "Boosting Naïf (N=" + std::to_string(n) + ")", [n]() {
+            BoostingRegressor b;
+            b.n_estimators = n;
+            b.max_depth = 4;
+            b.learning_rate = 0.2;
+            return b;
+        }, X, y);
     }
 
-    */
+    for (int n : n_trees) {
+            PerformanceEvaluator::evaluate_hpc(name, "Boosting HPC (N=" + std::to_string(n) + ")", [n]() {
+                HistogramBoostingRegressor b;
+                b.n_estimators = n;
+                b.max_depth = 4;
+                b.min_samples_split = 10;
+                b.learning_rate = 0.2;
+                b.n_bins = 256;
+                return b;
+            }, X, y);
+        }  
 
         std::cout << "\nTerminé !" << std::endl;
     } else {
