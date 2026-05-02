@@ -4,10 +4,8 @@
 #include "Matrix.hpp"
 #include "HistogramTreeRegressor.hpp"
 #include "QuantizedDataset.hpp"
-#include "HistogramBaggingRegressor.hpp"
 #include "BaggingRegressor.hpp"
 #include "BoostingRegressor.hpp"
-#include "HistogramBoostingRegressor.hpp"
 
 #include <vector>
 #include <iostream>
