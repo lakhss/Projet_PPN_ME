@@ -56,6 +56,41 @@ public:
         return meta_data_[feature_idx];
     }
 
+
+
+        void set_targets(const std::vector<double>& new_targets) {
+        if (new_targets.size() != num_samples_) {
+            throw std::runtime_error("set_targets: taille invalide");
+        }
+
+        targets_.clear();
+        targets_.reserve(new_targets.size());
+
+        for (double v : new_targets) {
+            targets_.push_back(static_cast<float>(v));
+        }
+    }
+
+    std::vector<double> get_raw_row(size_t sample_idx) const {
+        if (sample_idx >= num_samples_) {
+            throw std::runtime_error("get_raw_row: index invalide");
+        }
+
+        std::vector<double> row(num_features_);
+
+        for (size_t f = 0; f < num_features_; ++f) {
+            const FeatureMeta& meta = meta_data_[f];
+            uint8_t bin = binned_features_[f][sample_idx];
+
+            row[f] = static_cast<double>(meta.min_val)
+                   + static_cast<double>(bin) * static_cast<double>(meta.bin_width);
+        }
+
+        return row;
+    }
+
+    
+
     void ingest_and_quantize(const std::vector<std::vector<float>>& raw_csv_data, const std::vector<float>& raw_targets) {
         if (raw_csv_data.empty()) return;
         

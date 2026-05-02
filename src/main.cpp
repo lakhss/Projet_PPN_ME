@@ -5,8 +5,12 @@
 #include "HistogramTreeRegressor.hpp"
 #include "QuantizedDataset.hpp"
 #include "HistogramBaggingRegressor.hpp"
+<<<<<<< HEAD
 #include "BaggingRegressor.hpp"
 #include "BoostingRegressor.hpp"
+=======
+#include "HistogramBoostingRegressor.hpp"
+>>>>>>> 5e8f07fd7b6900393537b2efe1f186d8bd50e1d1
 
 #include <vector>
 #include <iostream>

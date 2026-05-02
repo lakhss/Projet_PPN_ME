@@ -1,7 +1,7 @@
 #pragma once
 
 #include "HistogramTreeRegressor.hpp"
-#include "Matrix.hpp"
+#include "QuantizedDataset.hpp"
 
 #include <vector>
 
@@ -11,9 +11,9 @@ public:
     double learning_rate = 0.1;
     int max_depth = 3;
     int min_samples_split = 6;
-    int n_bins = 16;
+    int n_bins = 256;
 
-    void fit(const Matrix& X, const std::vector<double>& y);
+    void fit(const QuantizedDataset& dataset);
     double predict(const std::vector<double>& x) const;
 
 private:

@@ -2,13 +2,16 @@
 
 #include <numeric>
 #include <iostream>
+#include <omp.h>
 
-void HistogramBoostingRegressor::fit(const Matrix& X,
-                                     const std::vector<double>& y) {
+void HistogramBoostingRegressor::fit(const QuantizedDataset& dataset) {
     trees.clear();
-    trees.reserve(n_estimators);
+    trees.resize(n_estimators);
 
-    if (X.empty() || y.empty() || X.rows() != y.size()) {
+    const std::size_t N = dataset.get_num_samples();
+    const auto& y = dataset.get_targets();
+
+    if (N == 0 || y.empty()) {
         std::cerr << "HistogramBoosting: dataset vide ou invalide." << std::endl;
         init_value = 0.0;
         return;
@@ -16,32 +19,48 @@ void HistogramBoostingRegressor::fit(const Matrix& X,
 
     init_value = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
 
-    std::vector<double> preds(y.size(), init_value);
-    std::vector<double> residuals(y.size());
+    std::vector<double> preds(N, init_value);
+    std::vector<double> residuals(N);
+
+    std::cout << "[OpenMP] Lancement du Boosting HPC sur "
+              << omp_get_max_threads()
+              << " threads..." << std::endl;
 
     for (int m = 0; m < n_estimators; ++m) {
-        for (size_t i = 0; i < y.size(); ++i) {
+
+        // 1. Calcul des residus en parallele
+        #pragma omp parallel for schedule(static)
+        for (int i = 0; i < static_cast<int>(N); ++i) {
             residuals[i] = y[i] - preds[i];
         }
 
-        HistogramTreeRegressor tree;
-        tree.max_depth = max_depth;
-        tree.min_samples_split = min_samples_split;
-        tree.n_bins = n_bins;
-        tree.fit(X, residuals);
+        // 2. Creation d'un dataset temporaire avec les residus comme cible
+        QuantizedDataset residual_dataset = dataset;
+        residual_dataset.set_targets(residuals);
 
-        for (size_t i = 0; i < X.rows(); ++i) {
-            preds[i] += learning_rate * tree.predict(X.row(i));
+        // 3. Construction de l'arbre histogramme
+        // La boucle sur les estimateurs reste sequentielle,
+        // mais l'arbre lui-même peut etre parallele si HistogramTreeRegressor l'est.
+        trees[m].max_depth = max_depth;
+        trees[m].min_samples_split = min_samples_split;
+        trees[m].n_bins = n_bins;
+        trees[m].fit(residual_dataset);
+
+        // 4. Mise a jour des predictions en parallele
+        #pragma omp parallel for schedule(static)
+        for (int i = 0; i < static_cast<int>(N); ++i) {
+            preds[i] += learning_rate * trees[m].predict(dataset.get_raw_row(i));
         }
-
-        trees.push_back(std::move(tree));
     }
 }
 
 double HistogramBoostingRegressor::predict(const std::vector<double>& x) const {
-    double y_pred = init_value;
-    for (const auto& t : trees) {
-        y_pred += learning_rate * t.predict(x);
+    double sum = 0.0;
+
+    #pragma omp parallel for reduction(+:sum) schedule(static)
+    for (int m = 0; m < static_cast<int>(trees.size()); ++m) {
+        sum += learning_rate * trees[m].predict(x);
     }
-    return y_pred;
+
+    return init_value + sum;
 }
