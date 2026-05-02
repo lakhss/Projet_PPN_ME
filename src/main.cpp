@@ -5,6 +5,8 @@
 #include "HistogramTreeRegressor.hpp"
 #include "QuantizedDataset.hpp"
 #include "HistogramBaggingRegressor.hpp"
+#include "BaggingRegressor.hpp"
+#include "BoostingRegressor.hpp"
 
 #include <vector>
 #include <iostream>
@@ -65,6 +67,9 @@ int main(int argc, char** argv) {
         }
 
         PerformanceEvaluator::print_header();
+
+    /*
+        
         std::vector<int> depths = {5, 8, 10, 15};
 
         for (int d : depths) {
@@ -75,6 +80,8 @@ int main(int argc, char** argv) {
                 return t;
             }, X, y); 
         }
+        
+        
 
         for (int d : depths) {
             PerformanceEvaluator::evaluate_hpc(name, "HistTree HPC (D=" + std::to_string(d) + ")", [d]() {
@@ -85,9 +92,21 @@ int main(int argc, char** argv) {
                 return t;
             }, X, y); 
         }  
-        
+
         std::vector<int> n_trees = {10, 30, 50, 100}; // On monte jusqu'à 100 arbres pour saturer les cœurs
-        
+
+        for (int n : n_trees) {
+        PerformanceEvaluator::evaluate(name, "Bagging Naïf (N=" + std::to_string(n) + ")", [n]() {
+            BaggingRegressor bg;
+            bg.n_estimators = n;
+            bg.max_depth = 12;
+            return bg;
+        },
+        X, y);
+    }
+
+    
+    
         for (int n : n_trees) {
             PerformanceEvaluator::evaluate_hpc(name, "Bagging HPC (N=" + std::to_string(n) + ")", [n]() {
                 HistogramBaggingRegressor bg;
@@ -97,6 +116,23 @@ int main(int argc, char** argv) {
                 return bg;
             }, X, y);
         }
+
+        
+
+        std::vector<int> n_trees = {10, 30, 50, 100}; // On monte jusqu'à 100 arbres pour saturer les cœurs
+
+        for (int n : n_trees) {
+        PerformanceEvaluator::evaluate(name, "Boosting Naïf (N=" + std::to_string(n) + ")", [n]() {
+            BoostingRegressor bg;
+            bg.n_estimators = n;
+            bg.max_depth = 4;
+            bg.learning_rate = 0.2;
+            return bg;
+        },
+        X, y);
+    }
+
+    */
 
         std::cout << "\nTerminé !" << std::endl;
     } else {
