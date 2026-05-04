@@ -41,6 +41,7 @@ HistogramSplit HistogramTreeRegressor::find_best_split_histogram(
     const double parent_mse = mse_from_stats(global_sum, global_sq_sum, node_samples);
     const size_t num_features = dataset.get_num_features();
 
+    #pragma omp parallel for schedule(dynamic) // parallélisation sur les features
     for (std::size_t feat = 0; feat < num_features; ++feat) {
         
         FastBinStats hist[256] = {}; 
@@ -96,11 +97,14 @@ HistogramSplit HistogramTreeRegressor::find_best_split_histogram(
 
             double gain = parent_mse - weighted_mse;
 
-            // Mise a jour si le gain est strictement supeerieur
-            if (gain > best_split.gain) {
-                best_split.gain = gain;
-                best_split.feature_idx = static_cast<int>(feat);
-                best_split.threshold_bin = static_cast<uint8_t>(b);
+            // Mise a jour si le gain est strictement superieur
+            #pragma omp critical
+            {
+                if (gain > best_split.gain) {
+                    best_split.gain = gain;
+                    best_split.feature_idx = static_cast<int>(feat);
+                    best_split.threshold_bin = static_cast<uint8_t>(b);
+                }
             }
         }
     }

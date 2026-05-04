@@ -6,8 +6,8 @@
 
 void HistogramBoostingRegressor::fit(const QuantizedDataset& dataset) {
     trees.clear();
-    trees.resize(n_estimators);
-
+    trees.reserve(n_estimators);
+    
     const std::size_t N = dataset.get_num_samples();
     const auto& y = dataset.get_targets();
 
@@ -26,28 +26,33 @@ void HistogramBoostingRegressor::fit(const QuantizedDataset& dataset) {
               << omp_get_max_threads()
               << " threads..." << std::endl;
 
+
+    QuantizedDataset working_dataset = dataset;
+
     for (int m = 0; m < n_estimators; ++m) {
 
         // 1. Calcul des residus en parallele
-       // #pragma omp parallel for schedule(static)
+        #pragma omp parallel for schedule(static)
         for (int i = 0; i < static_cast<int>(N); ++i) {
             residuals[i] = y[i] - preds[i];
         }
 
-        // 2. Creation d'un dataset temporaire avec les residus comme cible
-        QuantizedDataset residual_dataset = dataset;
-        residual_dataset.set_targets(residuals);
+        working_dataset.set_targets(residuals);
+
 
         // 3. Construction de l'arbre histogramme
         // La boucle sur les estimateurs reste sequentielle,
         // mais l'arbre lui-même peut etre parallele si HistogramTreeRegressor l'est.
+        trees.emplace_back();
         trees[m].max_depth = max_depth;
         trees[m].min_samples_split = min_samples_split;
         trees[m].n_bins = n_bins;
-        trees[m].fit(residual_dataset);
+
+
+        trees.back().fit(working_dataset);
 
         // 4. Mise a jour des predictions en parallele
-        // #pragma omp parallel for schedule(static)
+        #pragma omp parallel for schedule(static)
         for (int i = 0; i < static_cast<int>(N); ++i) {
             preds[i] += learning_rate * trees[m].predict(dataset.get_raw_row(i));
         }
@@ -57,7 +62,7 @@ void HistogramBoostingRegressor::fit(const QuantizedDataset& dataset) {
 double HistogramBoostingRegressor::predict(const std::vector<double>& x) const {
     double sum = 0.0;
 
-    // #pragma omp parallel for reduction(+:sum) schedule(static)
+    #pragma omp parallel for reduction(+:sum) schedule(static)
     for (int m = 0; m < static_cast<int>(trees.size()); ++m) {
         sum += learning_rate * trees[m].predict(x);
     }
