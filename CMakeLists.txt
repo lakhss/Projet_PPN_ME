@@ -1,41 +1,45 @@
 cmake_minimum_required(VERSION 3.14)
-project(ProjetPPNME)
+project(ProjetPPNME LANGUAGES CXX)
+
 set(CMAKE_CXX_STANDARD 17)
-include_directories(src)  
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_compile_options(-O3 -march=native -Wall -Wextra)
+option(BUILD_TESTS "Build unit tests" OFF)
 
-add_executable(test_loader 
-    src/main.cpp 
-    src/DecisionTreeRegressor.cpp 
-    src/DecisionTreeRegressor.hpp
-    src/CrossValidation.hpp
+include_directories(src)
+add_compile_options(-O3 -Wall -Wextra -march=native)
+
+set(PROJECT_SOURCES
+    src/main.cpp
+    src/DecisionTreeRegressor.cpp
+    src/HistogramTreeRegressor.cpp
     src/BaggingRegressor.cpp
-    src/BaggingRegressor.hpp
     src/BoostingRegressor.cpp
-    src/BoostingRegressor.hpp
-    src/PerformanceEvaluator.hpp
-    src/Node.hpp
-    src/DataLoader.hpp
-    src/Metrics.hpp
-) 
+    src/HistogramBaggingRegressor.cpp
+    src/HistogramBoostingRegressor.cpp
+    
+)
 
+add_executable(main ${PROJECT_SOURCES})
 
+if(BUILD_TESTS)
+    enable_testing()
+    find_package(GTest REQUIRED)
+    include_directories(${GTEST_INCLUDE_DIRS})
 
-# ===== Google Test =====
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
+    function(add_gtest_executable exe_name src_file)
+        add_executable(${exe_name}
+            ${src_file}
+            src/DecisionTreeRegressor.cpp
+            src/HistogramTreeRegressor.cpp
+        )
+        target_link_libraries(${exe_name} ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARY} pthread)
+        add_test(NAME ${exe_name} COMMAND ${exe_name})
+    endfunction()
 
-
-# utility function to add gtest executables
-function(add_gtest_executable exe_name src_file extra_cpp)
-   add_executable(${exe_name} ${src_file} ${extra_cpp})
-   target_link_libraries(${exe_name} ${GTEST_LIBRARIES} pthread)
-endfunction()
-
-
-# ===== Unit tests =====
-add_gtest_executable(test_dataloader    tests/test_dataloader.cpp src/DecisionTreeRegressor.cpp src/DataLoader.cpp)
-add_gtest_executable(test_mse           tests/test_mse.cpp src/DecisionTreeRegressor.cpp)
-add_gtest_executable(test_prediction    tests/test_prediction.cpp src/DecisionTreeRegressor.cpp)
-add_gtest_executable(test_small_tree    tests/test_small_tree.cpp src/DecisionTreeRegressor.cpp)
+    add_gtest_executable(test_dataloader tests/test_dataloader.cpp)
+    add_gtest_executable(test_mse tests/test_mse.cpp)
+    add_gtest_executable(test_prediction tests/test_prediction.cpp)
+    add_gtest_executable(test_small_tree tests/test_small_tree.cpp)
+endif()
