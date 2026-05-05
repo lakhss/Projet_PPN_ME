@@ -2,6 +2,7 @@
 
 #include <numeric>
 #include <iostream>
+#include <omp.h>
 
 void HistogramBoostingRegressor::fit(const Matrix& X,
                                      const std::vector<double>& y) {
@@ -18,8 +19,9 @@ void HistogramBoostingRegressor::fit(const Matrix& X,
 
     std::vector<double> preds(y.size(), init_value);
     std::vector<double> residuals(y.size());
-    #pragma omp parallel for
+    
     for (int m = 0; m < n_estimators; ++m) {
+        #pragma omp parallel for
         for (size_t i = 0; i < y.size(); ++i) {
             residuals[i] = y[i] - preds[i];
         }
@@ -29,7 +31,7 @@ void HistogramBoostingRegressor::fit(const Matrix& X,
         tree.min_samples_split = min_samples_split;
         tree.n_bins = n_bins;
         tree.fit(X, residuals);
-      
+        #pragma omp parallel for
         for (size_t i = 0; i < X.rows(); ++i) {
             preds[i] += learning_rate * tree.predict(X.row(i));
         }
@@ -40,6 +42,7 @@ void HistogramBoostingRegressor::fit(const Matrix& X,
 
 double HistogramBoostingRegressor::predict(const std::vector<double>& x) const {
     double y_pred = init_value;
+    #pragma omp parallel for reduction(+:y_pred)
     for (const auto& t : trees) {
         y_pred += learning_rate * t.predict(x);
     }
