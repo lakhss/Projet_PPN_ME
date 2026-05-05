@@ -1,88 +1,71 @@
+#include <gtest/gtest.h>
+
 #include "HistogramBaggingRegressor.hpp"
 #include "Matrix.hpp"
+#include <cmath>
 
-#include <cassert>
-#include <iostream>
-#include <vector>
+// -----------------------------
+// 1. Dataset vide
+// -----------------------------
+TEST(HistogramBagging, EmptyDataset) {
+    HistogramBaggingRegressor model;
 
-int main() {
-    std::cout << "Test HistogramBaggingRegressor\n";
+    Matrix X;
+    std::vector<double> y;
 
-    // -----------------------------
-    // 1. Test dataset vide
-    // -----------------------------
-    {
-        HistogramBaggingRegressor model;
+    model.fit(X, y);
 
-        Matrix X;
-        std::vector<double> y;
+    double pred = model.predict({1.0, 2.0});
 
-        model.fit(X, y);
+    EXPECT_DOUBLE_EQ(pred, 0.0);
+}
 
-        double pred = model.predict({1.0, 2.0});
+// -----------------------------
+// 2. Apprentissage simple
+// -----------------------------
+TEST(HistogramBagging, SimpleLearning) {
+    Matrix X(3, 1);
+    X(0, 0) = 1.0;
+    X(1, 0) = 2.0;
+    X(2, 0) = 3.0;
 
-        assert(pred == 0.0);
+    std::vector<double> y = {1.0, 2.0, 3.0};
 
-        std::cout << "Test dataset vide OK\n";
-    }
+    HistogramBaggingRegressor model;
+    model.n_estimators = 5;
+    model.sample_ratio = 1.0;
+    model.seed = 42;
 
-    // -----------------------------
-    // 2. Test simple apprentissage
-    // -----------------------------
-    {
-        Matrix X(3, 1);
-        X(0, 0) = 1.0;
-        X(1, 0) = 2.0;
-        X(2, 0) = 3.0;
+    model.fit(X, y);
 
-        std::vector<double> y = {1.0, 2.0, 3.0};
+    double pred = model.predict({2.0});
 
-        HistogramBaggingRegressor model;
-        model.n_estimators = 5;
-        model.sample_ratio = 1.0;
-        model.seed = 42;
+    std::cout << "Prediction = " << pred << std::endl;
 
-        model.fit(X, y);
+    EXPECT_GT(pred, 0.0);
+}
 
-        double pred = model.predict({2.0});
+// -----------------------------
+// 3. Stabilité bagging
+// -----------------------------
+TEST(HistogramBagging, Stability) {
+    Matrix X(4, 1);
+    X(0, 0) = 1.0;
+    X(1, 0) = 2.0;
+    X(2, 0) = 3.0;
+    X(3, 0) = 4.0;
 
-        std::cout << "Prediction = " << pred << "\n";
+    std::vector<double> y = {1.0, 2.0, 3.0, 4.0};
 
-        // juste vérifier que ça produit quelque chose de cohérent
-        assert(pred > 0.0);
+    HistogramBaggingRegressor model;
+    model.n_estimators = 10;
+    model.sample_ratio = 0.8;
+    model.seed = 123;
 
-        std::cout << "Test apprentissage OK\n";
-    }
+    model.fit(X, y);
 
-    // -----------------------------
-    // 3. Test stabilité bagging
-    // -----------------------------
-    {
-        Matrix X(4, 1);
-        X(0, 0) = 1.0;
-        X(1, 0) = 2.0;
-        X(2, 0) = 3.0;
-        X(3, 0) = 4.0;
+    double p1 = model.predict({3.0});
+    double p2 = model.predict({3.0});
 
-        std::vector<double> y = {1.0, 2.0, 3.0, 4.0};
-
-        HistogramBaggingRegressor model;
-        model.n_estimators = 10;
-        model.sample_ratio = 0.8;
-        model.seed = 123;
-
-        model.fit(X, y);
-
-        double p1 = model.predict({3.0});
-        double p2 = model.predict({3.0});
-
-        // bagging doit être stable
-        assert(std::abs(p1 - p2) < 1e-9);
-
-        std::cout << "Test stabilité OK\n";
-    }
-
-    std::cout << "Tous les tests OK ok \n";
-
-    return 0;
+    EXPECT_NEAR(p1, p2, 1e-9);
 }
