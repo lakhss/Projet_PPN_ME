@@ -13,7 +13,6 @@ from sklearn.ensemble import RandomForestRegressor
 df = pd.read_csv("datasets/combined.csv")
 
 # 2. Prétraitement 
-# On retire les outliers selon votre seuil de 26.0
 df = df[df.iloc[:, -1] < 26.0] 
 
 X = df.iloc[:, :-1].values
@@ -39,13 +38,13 @@ run_benchmark("XGBoost Hist", XGBRegressor(
     max_depth=4, 
     max_bin=256,
     learning_rate=0.2,
-    n_jobs=-1 # Utilise tous les cœurs comme votre OpenMP
+    n_jobs=-1 
 ))
 
 run_benchmark("LightGBM", LGBMRegressor(
     n_estimators=100, 
     max_depth=4, 
-    max_bin=255, # LightGBM utilise 255 bins par défaut + 1 pour les nuls
+    max_bin=255, 
     learning_rate=0.2,
     n_jobs=-1
 ))
@@ -63,5 +62,5 @@ run_benchmark("Sklearn Hist", HistGradientBoostingRegressor(
 run_benchmark("Sklearn RF", RandomForestRegressor(
     n_estimators=100, 
     max_depth=12, 
-    n_jobs=-1 # Parallélisme équivalent à ton OpenMP
+    n_jobs=-1 
 ))

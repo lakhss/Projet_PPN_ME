@@ -3,10 +3,8 @@ import matplotlib.pyplot as plt
 
 df = pd.read_csv("compil.csv", header=None, names=["flags", "time"])
 
-# 🔥 conversion importante
 df["time"] = pd.to_numeric(df["time"], errors="coerce")
 
-# supprime lignes invalides si besoin
 df = df.dropna()
 
 baseline = df["time"].iloc[0]
