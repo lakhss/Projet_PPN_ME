@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(ProjetPPNME LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -18,8 +18,12 @@ set(PROJECT_SOURCES
     src/BoostingRegressor.cpp
     src/HistogramBaggingRegressor.cpp
     src/HistogramBoostingRegressor.cpp
-    
 )
+find_package(OpenMP REQUIRED)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
 
 add_executable(main ${PROJECT_SOURCES})
 
@@ -42,4 +46,8 @@ if(BUILD_TESTS)
     add_gtest_executable(test_mse tests/test_mse.cpp)
     add_gtest_executable(test_prediction tests/test_prediction.cpp)
     add_gtest_executable(test_small_tree tests/test_small_tree.cpp)
+endif()
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(main PRIVATE OpenMP::OpenMP_CXX)
 endif()

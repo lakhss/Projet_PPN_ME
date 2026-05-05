@@ -1,0 +1,6 @@
+flags,time
+-O0,3.123242
+-O2,1.091610
+-O3,1.083882
+-O3 -march=native,1.046276
+-O3 -march=native -flto,1.049108

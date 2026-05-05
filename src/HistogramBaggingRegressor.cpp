@@ -1,43 +1,43 @@
 #include "HistogramBaggingRegressor.hpp"
 
-#include <algorithm>
 #include <iostream>
 #include <random>
+#include <omp.h> 
 
-void HistogramBaggingRegressor::fit(const Matrix& X,
-                                    const std::vector<double>& y) {
+void HistogramBaggingRegressor::fit(const QuantizedDataset& dataset) {
     trees.clear();
-    trees.reserve(n_estimators);
+    
+    // std::vector::emplace_back a ne pas mettre Jam n'a pas aimer et il a raison 
+    trees.resize(n_estimators); 
 
-    const size_t N = X.rows();
-    if (N == 0 || y.empty() || X.rows() != y.size()) {
+    const std::size_t N = dataset.get_num_samples();
+    if (N == 0) {
         std::cerr << "HistogramBagging: dataset vide ou invalide." << std::endl;
         return;
     }
 
-    const size_t m = std::max<size_t>(1, static_cast<size_t>(sample_ratio * N));
+    const std::size_t m = std::max<std::size_t>(1, static_cast<std::size_t>(sample_ratio * N));
 
-    std::mt19937 gen(seed);
-    std::uniform_int_distribution<size_t> dist(0, N - 1);
+    std::cout << "[OpenMP] Lancement du Bagging HPC sur " << omp_get_max_threads() << " threads..." << std::endl;
 
+
+    //#pragma omp parallel for schedule(dynamic)
     for (int b = 0; b < n_estimators; ++b) {
-        Matrix Xb(m, X.cols());
-        std::vector<double> yb;
-        yb.reserve(m);
+        
+        std::mt19937 local_gen(seed + b * 19937); 
+        std::uniform_int_distribution<std::size_t> dist(0, N - 1);
 
-        for (size_t i = 0; i < m; ++i) {
-            size_t j = dist(gen);
-            for (size_t c = 0; c < X.cols(); ++c) {
-                Xb(i, c) = X(j, c);
-            }
-            yb.push_back(y[j]);
+        // On ne copie aucune donnée on génère juste 'm' indices aléatoires. BOOTSTRAP
+        std::vector<std::size_t> bootstrap_indices(m);
+        for (std::size_t i = 0; i < m; ++i) {
+            bootstrap_indices[i] = dist(local_gen);
         }
 
-        trees.emplace_back();
-        trees.back().max_depth = max_depth;
-        trees.back().min_samples_split = min_samples_split;
-        trees.back().n_bins = n_bins;
-        trees.back().fit(Xb, yb);
+        trees[b].max_depth = max_depth;
+        trees[b].min_samples_split = min_samples_split;
+        trees[b].n_bins = n_bins;
+        
+        trees[b].fit_bootstrap(dataset, bootstrap_indices); 
     }
 }
 
@@ -45,8 +45,13 @@ double HistogramBaggingRegressor::predict(const std::vector<double>& x) const {
     if (trees.empty()) return 0.0;
 
     double sum = 0.0;
-    for (const auto& t : trees) {
-        sum += t.predict(x);
+    
+    // Le processeur additionne en cache L1 local, puis fait la somme finale
+    
+    //#pragma omp parallel for reduction(+:sum)
+    for (int b = 0; b < n_estimators; ++b) {
+        sum += trees[b].predict(x);
     }
-    return sum / trees.size();
+    
+    return sum / static_cast<double>(trees.size());
 }
