@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
         PerformanceEvaluator::print_header();
 
-    /*
+        /*
         
         std::vector<int> depths = {5, 8, 10, 15};
 
@@ -93,7 +93,8 @@ int main(int argc, char** argv) {
                 return t;
             }, X, y); 
         }  
-
+        
+        
         std::vector<int> n_trees = {10, 30, 50, 100}; // On monte jusqu'à 100 arbres pour saturer les cœurs
 
         for (int n : n_trees) {
@@ -118,11 +119,7 @@ int main(int argc, char** argv) {
             }, X, y);
         }
 
-        */
-
-        std::vector<int> n_trees = {10, 30, 50, 100}; // On monte jusqu'à 100 arbres pour saturer les cœurs
-
-        /*
+        
         PerformanceEvaluator::evaluate(name, "Boosting Naïf (N=" + std::to_string(n) + ")", [n]() {
             BoostingRegressor bg;
             bg.n_estimators = n;
@@ -143,6 +140,8 @@ int main(int argc, char** argv) {
         },
         X, y);
     } */
+
+    std::vector<int> n_trees = {10, 30, 50, 100};
 
     for (int n : n_trees) {
     PerformanceEvaluator::evaluate(name, "Boosting Naïf (N=" + std::to_string(n) + ")", [n]() {
@@ -165,7 +164,7 @@ int main(int argc, char** argv) {
                 return b;
             }, X, y);
         }  
-
+        
         std::cout << "\nTerminé !" << std::endl;
     } else {
         std::cout << "Mode non supporté pour le moment." << std::endl;

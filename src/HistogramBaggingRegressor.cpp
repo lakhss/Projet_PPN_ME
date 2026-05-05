@@ -21,7 +21,7 @@ void HistogramBaggingRegressor::fit(const QuantizedDataset& dataset) {
     std::cout << "[OpenMP] Lancement du Bagging HPC sur " << omp_get_max_threads() << " threads..." << std::endl;
 
 
-    #pragma omp parallel for schedule(dynamic)
+    //#pragma omp parallel for schedule(dynamic)
     for (int b = 0; b < n_estimators; ++b) {
         
         std::mt19937 local_gen(seed + b * 19937); 
@@ -48,7 +48,7 @@ double HistogramBaggingRegressor::predict(const std::vector<double>& x) const {
     
     // Le processeur additionne en cache L1 local, puis fait la somme finale
     
-    #pragma omp parallel for reduction(+:sum)
+    //#pragma omp parallel for reduction(+:sum)
     for (int b = 0; b < n_estimators; ++b) {
         sum += trees[b].predict(x);
     }

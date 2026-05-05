@@ -5,7 +5,10 @@ set -e
 OUTPUT_FILE="benchmark_results.csv"
 PLOT_FILE="benchmark_plot.png"
 
-echo "Running C++ benchmark..."
+# ---- set number of OpenMP threads ----
+export OMP_NUM_THREADS=8  
+
+echo "Running C++ benchmark with $OMP_NUM_THREADS threads..."
 
 ../build/main > raw_output.txt
 

@@ -7,7 +7,7 @@ output_image = sys.argv[2]
 
 df = pd.read_csv(csv_file)
 
-# ---- filtering (adapted to Boosting naming) ----
+# ---- filtering ----
 naive = df[df["model"] == "Boosting Naïf"].sort_values("n_estimators")
 hpc = df[df["model"] == "Boosting HPC"].sort_values("n_estimators")
 
@@ -15,8 +15,7 @@ fig, ax1 = plt.subplots(figsize=(10, 5))
 
 # ---- TIME (left axis) ----
 ax1.set_xlabel("Iterations (N)", fontsize=16)
-ax1.set_ylabel("Time (s) [logarithmic scale]", fontsize=16)
-ax1.set_yscale("log")
+ax1.set_ylabel("Time (s)", fontsize=16)
 
 ax1.plot(
     naive["n_estimators"], naive["time"],
@@ -29,11 +28,11 @@ ax1.plot(
     hpc["n_estimators"], hpc["time"],
     marker="o",
     color="red",
-    label="Hist - Time"
+    label="HPC - Time"
 )
 
 ax1.tick_params(axis='both', labelsize=12)
-ax1.grid(True)
+ax1.grid(True, linestyle="--", alpha=0.4)
 
 # ---- ERROR (right axis) ----
 ax2 = ax1.twinx()
@@ -52,7 +51,7 @@ ax2.plot(
     linestyle="--",
     marker="s",
     color="red",
-    label="Hist - RMSE"
+    label="HPC - RMSE"
 )
 
 ax2.tick_params(axis='y', labelsize=12)
@@ -69,7 +68,7 @@ ax1.legend(
     fontsize=12
 )
 
-plt.title("Boosting : Performance vs Precision (Naive vs Histogram-based split)", fontsize=18)
+plt.title("Boosting: Performance vs Precision (Naive vs HPC)", fontsize=18)
 
 plt.tight_layout()
 plt.savefig(output_image, dpi=200)

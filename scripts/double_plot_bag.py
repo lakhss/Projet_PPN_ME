@@ -13,9 +13,8 @@ hist = df[df["model"] == "Bagging HPC"].sort_values("n_estimators")
 fig, ax1 = plt.subplots(figsize=(10, 5))
 
 # ---- TIME (left axis) ----
-ax1.set_xlabel("Nombre d'estimateurs (N)")
-ax1.set_ylabel("Temps (s) [échelle logarithmique]")
-
+ax1.set_xlabel("Number of estimators (N)", fontsize=16)
+ax1.set_ylabel("Time (s) [logarithmic scale]", fontsize=16)
 
 ax1.set_yscale("log")
 
@@ -33,12 +32,12 @@ ax1.plot(
     label="HPC - Temps"
 )
 
-ax1.tick_params(axis='y')
+ax1.tick_params(axis='both', labelsize=12)
 ax1.grid(True)
 
 # ---- ERROR (right axis) ----
 ax2 = ax1.twinx()
-ax2.set_ylabel("RMSE")
+ax2.set_ylabel("RMSE", fontsize=16)
 
 ax2.plot(
     naive["n_estimators"], naive["rmse"],
@@ -56,9 +55,9 @@ ax2.plot(
     label="HPC - RMSE"
 )
 
-ax2.tick_params(axis='y')
+ax2.tick_params(axis='y', labelsize=12)
 
-# ---- LEGEND (middle right) ----
+# ---- LEGEND ----
 lines_1, labels_1 = ax1.get_legend_handles_labels()
 lines_2, labels_2 = ax2.get_legend_handles_labels()
 
@@ -66,10 +65,12 @@ ax1.legend(
     lines_1 + lines_2,
     labels_1 + labels_2,
     loc="center right",
-    bbox_to_anchor=(1, 0.75)
+    bbox_to_anchor=(1, 0.75),
+    fontsize=12
 )
 
-plt.title("Bagging : Performance vs Précision (Naïf vs HPC)")
+plt.title("Bagging : Performance vs Precision (Naive vs Histogram-based split)", fontsize=18)
+
 plt.tight_layout()
 plt.savefig(output_image, dpi=200)
 
