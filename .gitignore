@@ -21,3 +21,5 @@ perf.data.old
 results.csv
 *.tar.xz
 
+venv/
+venv/

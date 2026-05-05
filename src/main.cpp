@@ -14,6 +14,7 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
+#include <chrono>
 
 static std::string resolve_dataset_path(const std::string& relative_path) {
     namespace fs = std::filesystem;
@@ -30,17 +31,11 @@ static std::string resolve_dataset_path(const std::string& relative_path) {
 }
 
 int main(int argc, char** argv) {
-    std::ofstream outfile("results.csv");
-    if (outfile.is_open()) {
-        outfile << "Dataset,Model,RMSE,MAE,MAPE,Time\n";
-        outfile.close();
-    }
-
     int choice = 8; 
     if (argc >= 2) choice = std::stoi(argv[1]);
 
     if(choice == 8) {
-        std::cout << "=== MODE 8 : BENCHMARK COMBINED DATASET (HPC) ===\n" << std::endl;
+        std::cout << "=== MODE 8 : BENCHMARK COMPLET (S1 vs S2) ===\n" << std::endl;
         std::string name = "Combined";
         std::string path = resolve_dataset_path("../datasets/combined.csv");
 
@@ -52,20 +47,13 @@ int main(int argc, char** argv) {
         DataLoader::load_csv(path, X, y, outlier_threshold);
 
         if (X.empty()) {
-            std::cerr << "Erreur de chargement." << std::endl;
+            std::cerr << "Erreur de chargement du dataset." << std::endl;
             return 1;
         }
 
-        std::cout << "[HPC] Conversion AoS vers SoA..." << std::endl;
+        // Préparation du Dataset Quantifié (HPC)
         QuantizedDataset q_dataset;
         q_dataset.ingest_from_matrix(X, y);
-
-        std::cout << "[HPC] Préchauffage CPU..." << std::endl;
-        {
-            HistogramTreeRegressor dummy;
-            dummy.max_depth = 5;
-            dummy.fit(q_dataset);
-        }
 
         PerformanceEvaluator::print_header();
 
@@ -73,16 +61,15 @@ int main(int argc, char** argv) {
         
         std::vector<int> depths = {5, 8, 10, 15};
 
-        for (int d : depths) {
-            PerformanceEvaluator::evaluate(name, "Arbre Naïf (D=" + std::to_string(d) + ")", [d]() {
-                DecisionTreeRegressor t;
-                t.max_depth = d;
-                t.min_samples_split = 10;
-                return t;
-            }, X, y); 
-        }
-        
-        
+        // 1. BENCHMARK BAGGING (Naïf vs HPC)
+        for (int n : n_trees_list) {
+            // Version Naïve (S1)
+            PerformanceEvaluator::evaluate(name, "Bagging Naïf (N=" + std::to_string(n) + ")", [n, depth_bagging]() {
+                BaggingRegressor bg;
+                bg.n_estimators = n;
+                bg.max_depth = depth_bagging;
+                return bg;
+            }, X, y);
 
         for (int d : depths) {
             PerformanceEvaluator::evaluate_hpc(name, "HistTree HPC (D=" + std::to_string(d) + ")", [d]() {
@@ -113,7 +100,7 @@ int main(int argc, char** argv) {
             PerformanceEvaluator::evaluate_hpc(name, "Bagging HPC (N=" + std::to_string(n) + ")", [n]() {
                 HistogramBaggingRegressor bg;
                 bg.n_estimators = n;
-                bg.max_depth = 12; 
+                bg.max_depth = depth_bagging;
                 bg.n_bins = 256;
                 return bg;
             }, X, y);
@@ -157,8 +144,7 @@ int main(int argc, char** argv) {
             PerformanceEvaluator::evaluate_hpc(name, "Boosting HPC (N=" + std::to_string(n) + ")", [n]() {
                 HistogramBoostingRegressor b;
                 b.n_estimators = n;
-                b.max_depth = 4;
-                b.min_samples_split = 10;
+                b.max_depth = depth_boosting;
                 b.learning_rate = 0.2;
                 b.n_bins = 256;
                 return b;
@@ -167,7 +153,8 @@ int main(int argc, char** argv) {
         
         std::cout << "\nTerminé !" << std::endl;
     } else {
-        std::cout << "Mode non supporté pour le moment." << std::endl;
+        std::cout << "Mode non supporté. Utilisez le Mode 8 pour le benchmark final." << std::endl;
     }
+
     return 0;
 }
