@@ -52,7 +52,7 @@ void HistogramBoostingRegressor::fit(const QuantizedDataset& dataset) {
         trees.back().fit(working_dataset);
 
         // 4. Mise a jour des predictions en parallele
-        #pragma omp parallel for schedule(static)
+        // #pragma omp parallel for schedule(static)
         for (int i = 0; i < static_cast<int>(N); ++i) {
             preds[i] += learning_rate * trees[m].predict(dataset.get_raw_row(i));
         }
@@ -62,7 +62,7 @@ void HistogramBoostingRegressor::fit(const QuantizedDataset& dataset) {
 double HistogramBoostingRegressor::predict(const std::vector<double>& x) const {
     double sum = 0.0;
 
-    #pragma omp parallel for reduction(+:sum) schedule(static)
+    // #pragma omp parallel for reduction(+:sum) schedule(static)
     for (int m = 0; m < static_cast<int>(trees.size()); ++m) {
         sum += learning_rate * trees[m].predict(x);
     }

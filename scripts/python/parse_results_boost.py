@@ -2,8 +2,8 @@ import sys
 import re
 import csv
 
-input_file = sys.argv[1]
-output_file = sys.argv[2]
+input_file = "../raw_output.txt"
+output_file = sys.argv[1]
 
 # Match:
 # Boosting Naïf (N=10)         0.057252    47.358954   4.015582

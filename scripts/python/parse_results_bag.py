@@ -2,7 +2,7 @@ import sys
 import re
 import csv
 
-input_file = sys.argv[1]
+input_file = "../raw_output.txt"
 output_file = sys.argv[2]
 
 # Match:

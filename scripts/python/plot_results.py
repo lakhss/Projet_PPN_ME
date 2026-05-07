@@ -7,7 +7,7 @@ output_image = sys.argv[2]
 
 df = pd.read_csv(csv_file)
 
-naive = df[df["model"] == "Arbre Naïf"]
+naive = df[df["model"] == "Naïf"]
 hist = df[df["model"] == "HistTree HPC"]
 
 # Sort by depth
@@ -17,20 +17,20 @@ hist = hist.sort_values("depth")
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
 # ---- TIME ----
-axes[0].plot(naive["depth"], naive["time"], marker="o", label="Naïf")
-axes[0].plot(hist["depth"], hist["time"], marker="o", label="Hist (HPC)")
-axes[0].set_title("Temps d'exécution")
-axes[0].set_xlabel("Profondeur")
-axes[0].set_ylabel("Temps (s)")
+axes[0].plot(naive["depth"], naive["time"], marker="o",color="blue", label="Naïf")
+axes[0].plot(hist["depth"], hist["time"], marker="o",color="red", label="Hist/SoA")
+axes[0].set_title("Execution time", fontsize=18)
+axes[0].set_xlabel("Depth", fontsize=14)
+axes[0].set_ylabel("Time (s)", fontsize=14)
 axes[0].legend()
 axes[0].grid(True)
 
 # ---- ERROR (RMSE) ----
-axes[1].plot(naive["depth"], naive["rmse"], marker="o", label="Naïf RMSE")
-axes[1].plot(hist["depth"], hist["rmse"], marker="o", label="Hist RMSE")
-axes[1].set_title("Erreur (RMSE)")
-axes[1].set_xlabel("Profondeur")
-axes[1].set_ylabel("RMSE")
+axes[1].plot(naive["depth"], naive["rmse"], marker="o",color="blue", label="Naïf RMSE")
+axes[1].plot(hist["depth"], hist["rmse"], marker="o",color="red", label="Hist/SoA RMSE")
+axes[1].set_title("Error (RMSE)", fontsize=18)
+axes[1].set_xlabel("Depth", fontsize=14)
+axes[1].set_ylabel("RMSE", fontsize=14)
 axes[1].legend()
 axes[1].grid(True)
 

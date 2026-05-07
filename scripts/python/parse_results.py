@@ -1,31 +1,48 @@
-import sys
-import re
 import csv
+import re
 
-input_file = sys.argv[1]
-output_file = sys.argv[2]
-
-pattern = re.compile(
-    r"^(Arbre Naïf|HistTree HPC)\s*\(D=(\d+)\)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)"
-)
-
-rows = []
+input_file = "../raw_output.txt"
+output_file = "../csv/parsed_results.csv"
 
 with open(input_file, "r", encoding="utf-8") as f:
-    for line in f:
-        match = pattern.search(line)
-        if match:
-            model = match.group(1)
-            depth = int(match.group(2))
-            rmse = float(match.group(3))
-            mape = float(match.group(4))
-            time = float(match.group(5))
+    lines = f.readlines()
 
-            rows.append([model, depth, rmse, mape, time])
+rows = []
+start = False
 
-with open(output_file, "w", newline="") as f:
+for line in lines:
+    line = line.strip()
+
+    if line.startswith("Modele"):
+        start = True
+        continue
+
+    if start:
+        if line == "" or line.startswith("Terminé"):
+            break
+
+        parts = re.split(r"\s{2,}", line)
+
+        if len(parts) >= 4:
+            try:
+                match = re.search(r"D=(\d+)", parts[0])
+                depth = int(match.group(1)) if match else None
+
+                model = parts[0].split(" (")[0]
+
+                rows.append([
+                    model,
+                    depth,
+                    float(parts[1]),
+                    float(parts[2]),
+                    float(parts[3])
+                ])
+            except:
+                pass
+
+with open(output_file, "w", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)
     writer.writerow(["model", "depth", "rmse", "mape", "time"])
     writer.writerows(rows)
 
-print(f"[OK] CSV written to {output_file}")
+print("Done:", output_file)

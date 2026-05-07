@@ -56,21 +56,24 @@ int main(int argc, char** argv) {
         q_dataset.ingest_from_matrix(X, y);
 
         PerformanceEvaluator::print_header();
-
-        /*
         
         std::vector<int> depths = {5, 8, 10, 15};
+        std::vector<int> n_trees = {10, 30, 50, 100}; // On monte jusqu'à 100 arbres pour saturer les cœurs
 
-        // 1. BENCHMARK BAGGING (Naïf vs HPC)
-        for (int n : n_trees_list) {
-            // Version Naïve (S1)
-            PerformanceEvaluator::evaluate(name, "Bagging Naïf (N=" + std::to_string(n) + ")", [n, depth_bagging]() {
-                BaggingRegressor bg;
-                bg.n_estimators = n;
-                bg.max_depth = depth_bagging;
-                return bg;
-            }, X, y);
 
+        // 1. BENCHMARK TREE (Naïf vs Hist/SoA)
+
+        // Decision tree S1
+         for (int d : depths) {
+            PerformanceEvaluator::evaluate(name, "Arbre (D=" + std::to_string(d) + ")", [d]() {
+            DecisionTreeRegressor t;
+            t.max_depth = d;
+            t.min_samples_split = 10;
+            return t;
+        }, X, y);
+    }
+
+    /*        // Decision tree Hist + SoA
         for (int d : depths) {
             PerformanceEvaluator::evaluate_hpc(name, "HistTree HPC (D=" + std::to_string(d) + ")", [d]() {
                 HistogramTreeRegressor t;
@@ -80,9 +83,9 @@ int main(int argc, char** argv) {
                 return t;
             }, X, y); 
         }  
+            */
         
-        
-        std::vector<int> n_trees = {10, 30, 50, 100}; // On monte jusqu'à 100 arbres pour saturer les cœurs
+        // BENCHMARK BAGGING  (Naïf vs Hist/SoA)
 
         for (int n : n_trees) {
         PerformanceEvaluator::evaluate(name, "Bagging Naïf (N=" + std::to_string(n) + ")", [n]() {
@@ -94,41 +97,23 @@ int main(int argc, char** argv) {
         X, y);
     }
 
+    /*
     
     
         for (int n : n_trees) {
             PerformanceEvaluator::evaluate_hpc(name, "Bagging HPC (N=" + std::to_string(n) + ")", [n]() {
                 HistogramBaggingRegressor bg;
                 bg.n_estimators = n;
-                bg.max_depth = depth_bagging;
+                bg.max_depth = 12;
                 bg.n_bins = 256;
                 return bg;
             }, X, y);
         }
 
-        
-        PerformanceEvaluator::evaluate(name, "Boosting Naïf (N=" + std::to_string(n) + ")", [n]() {
-            BoostingRegressor bg;
-            bg.n_estimators = n;
-            bg.max_depth = 4;
-            bg.learning_rate = 0.2;
-            return bg;
-        },
-        X, y);
-    } 
+        */
 
 
-        for (int n : n_trees) {
-        PerformanceEvaluator::evaluate(name, "Bagging Naïf (N=" + std::to_string(n) + ")", [n]() {
-            BaggingRegressor bg;
-            bg.n_estimators = n;
-            bg.max_depth = 12;
-            return bg;
-        },
-        X, y);
-    } */
-
-    std::vector<int> n_trees = {10, 30, 50, 100};
+        // BENCHMARK BOOSTING (Naïf vs Hist/SoA)
 
     for (int n : n_trees) {
     PerformanceEvaluator::evaluate(name, "Boosting Naïf (N=" + std::to_string(n) + ")", [n]() {
@@ -140,16 +125,20 @@ int main(int argc, char** argv) {
         }, X, y);
     }
 
+    /*
+
     for (int n : n_trees) {
             PerformanceEvaluator::evaluate_hpc(name, "Boosting HPC (N=" + std::to_string(n) + ")", [n]() {
                 HistogramBoostingRegressor b;
                 b.n_estimators = n;
-                b.max_depth = depth_boosting;
+                b.max_depth = 4;
                 b.learning_rate = 0.2;
                 b.n_bins = 256;
                 return b;
             }, X, y);
-        }  
+        } 
+           
+        */
         
         std::cout << "\nTerminé !" << std::endl;
     } else {
